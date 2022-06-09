@@ -12,6 +12,7 @@ class BottomNavigationProvider extends ChangeNotifier {
 
   bool _isLog = false;
 
+  // ignore: unnecessary_getters_setters
   bool get isLog => _isLog;
 
   set isLog(bool newValue) {

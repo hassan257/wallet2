@@ -21,6 +21,7 @@ class LoginView extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () async {
+                // ignore: unused_local_variable
                 final User? user = await currentUser();
                 locator<NavigationService>().navigateTo('/home');
               },

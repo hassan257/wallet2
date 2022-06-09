@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wallet2/src/ui/layout/layouts.dart';
-import 'package:wallet2/src/views/views.dart';
 
 import 'locator.dart';
 import 'src/providers/providers.dart';
@@ -20,10 +19,10 @@ Future<void> main() async {
   FirebaseAuth.instance.idTokenChanges().listen((User? user) {
     if (user == null) {
       isLog = false;
-      print('no token');
+      // print('no token');
     } else {
       isLog = true;
-      print('si token');
+      // print('si token');
     }
     runApp(MultiProvider(
       providers: [

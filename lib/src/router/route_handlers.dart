@@ -19,5 +19,9 @@ final loginHandler = Handler(handlerFunc: (context, params) {
   return const LoginView();
 });
 
+final addMoveHandler = Handler(handlerFunc: (context, params) {
+  return const AddMoveView();
+});
+
 // 404
 final pageNotFound = Handler(handlerFunc: (_, __) => const NotFoundView());

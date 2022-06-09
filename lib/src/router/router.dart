@@ -16,6 +16,8 @@ class Flurorouter {
         handler: settingsHandler, transitionType: TransitionType.fadeIn);
     router.define('/login',
         handler: loginHandler, transitionType: TransitionType.fadeIn);
+    router.define('/addmove',
+        handler: addMoveHandler, transitionType: TransitionType.inFromRight);
 
     // 404 - Not Page Found
     router.notFoundHandler = pageNotFound;
