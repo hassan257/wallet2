@@ -1,24 +1,33 @@
 import 'package:flutter/material.dart';
 
 class TextFieldSemantics extends StatelessWidget {
-  const TextFieldSemantics({
-    Key? key,
-    required this.label, required this.hintText, this.labelColor, this.keyboardType, this.initialValue, this.onChanged, this.icon, this.iconFunction
-  }) : super(key: key);
+  const TextFieldSemantics(
+      {Key? key,
+      required this.label,
+      required this.hintText,
+      this.labelColor,
+      this.keyboardType,
+      this.initialValue,
+      this.onChanged,
+      this.icon,
+      this.iconFunction,
+      this.validator})
+      : super(key: key);
 
   final String label;
   final String hintText;
   final Color? labelColor;
   final TextInputType? keyboardType;
   final String? initialValue;
-  final Function(String value)? onChanged;
+  final Function(dynamic value)? onChanged;
   final IconData? icon;
   final Function()? iconFunction;
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {
     bool iconVisible = false;
-    if(icon != null){
+    if (icon != null) {
       iconVisible = true;
     }
     return Semantics(
@@ -40,46 +49,56 @@ class TextFieldSemantics extends StatelessWidget {
           // ],
           onChanged: onChanged,
           initialValue: initialValue,
-          decoration: _inputDecoration(iconVisible: iconVisible, label: label, hintText: hintText, icon: icon, labelColor: labelColor, iconFunction: iconFunction),
+          decoration: _inputDecoration(
+              iconVisible: iconVisible,
+              label: label,
+              hintText: hintText,
+              icon: icon,
+              labelColor: labelColor,
+              iconFunction: iconFunction),
           keyboardType: keyboardType,
-          textCapitalization: TextCapitalization.sentences
+          textCapitalization: TextCapitalization.sentences,
+          validator: validator,
         ),
       ),
     );
   }
 }
 
- InputDecoration _inputDecoration({
-   required bool iconVisible,
-   required String label,
-   required String hintText,
-   IconData? icon,
-   Color? labelColor,
-   Function()? iconFunction
-  }){
-    if(iconVisible){
-      return InputDecoration(
-          icon: GestureDetector(
-            onTap: iconFunction,
-            child: Icon(icon, color: labelColor,)),
-          label: Text(label, 
-            style: TextStyle(
-              color: labelColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          hintText: hintText,
-      );
-    }else{
-      return InputDecoration(
-        label: Text(label, 
-          style: TextStyle(
+InputDecoration _inputDecoration(
+    {required bool iconVisible,
+    required String label,
+    required String hintText,
+    IconData? icon,
+    Color? labelColor,
+    Function()? iconFunction}) {
+  if (iconVisible) {
+    return InputDecoration(
+      icon: GestureDetector(
+          onTap: iconFunction,
+          child: Icon(
+            icon,
             color: labelColor,
-            fontWeight: FontWeight.bold,
-          ),
+          )),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: labelColor,
+          fontWeight: FontWeight.bold,
         ),
-        hintText: hintText,
+      ),
+      hintText: hintText,
     );
-    }
-  
+  } else {
+    return InputDecoration(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: labelColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      hintText: hintText,
+    );
+  }
 }

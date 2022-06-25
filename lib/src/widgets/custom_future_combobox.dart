@@ -9,16 +9,18 @@ class CustomFutureCombobox extends StatelessWidget {
   final Color? color;
   final String? label;
   dynamic value;
-  // final Function(dynamic)? onChanged;
-  CustomFutureCombobox({
-    Key? key,
-    required this.future,
-    this.collection = false,
-    this.color,
-    this.label,
-    this.value,
-    // this.onChanged
-  }) : super(key: key);
+  final Function(dynamic) onChanged;
+  final String? Function(dynamic)? validator;
+  CustomFutureCombobox(
+      {Key? key,
+      required this.future,
+      this.collection = false,
+      this.color,
+      this.label,
+      this.value,
+      required this.onChanged,
+      this.validator})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +36,9 @@ class CustomFutureCombobox extends StatelessWidget {
                 initialElement: elementos[0]['id'],
                 color: color,
                 label: label,
-                value: value
-                // onChanged: onChanged,
-                );
+                value: value,
+                onChanged: onChanged,
+                validator: validator);
           } else {
             final List<QueryDocumentSnapshot> snapshotData =
                 snapshot.data!.docs;
@@ -46,13 +48,14 @@ class CustomFutureCombobox extends StatelessWidget {
                   .add({'id': element.id, 'nombre': element.get('nombre')});
             }
             return _Combobox(
-                elements: elementos,
-                initialElement: elementos[0]['id'],
-                color: color,
-                label: label,
-                value: value
-                // onChanged: onChanged,
-                );
+              elements: elementos,
+              initialElement: elementos[0]['id'],
+              color: color,
+              label: label,
+              value: value,
+              onChanged: onChanged,
+              validator: validator,
+            );
           }
         } else {
           return const Center(
@@ -70,17 +73,19 @@ class _Combobox extends StatefulWidget {
   final String? label;
   final Color? color;
   dynamic value;
-  // final Function(dynamic)? onChanged;
+  final Function(dynamic) onChanged;
+  final String? Function(dynamic)? validator;
   dynamic initialElement;
-  _Combobox({
-    Key? key,
-    required this.elements,
-    required this.initialElement,
-    this.label,
-    this.color,
-    this.value,
-    // this.onChanged
-  }) : super(key: key);
+  _Combobox(
+      {Key? key,
+      required this.elements,
+      required this.initialElement,
+      this.label,
+      this.color,
+      this.value,
+      required this.onChanged,
+      this.validator})
+      : super(key: key);
 
   @override
   State<_Combobox> createState() => __ComboboxState();
@@ -115,18 +120,20 @@ class __ComboboxState extends State<_Combobox> {
               style:
                   TextStyle(color: widget.color, fontWeight: FontWeight.bold),
             ),
-            DropdownButton<dynamic>(
-              isExpanded: true,
-              value: widget.initialElement,
-              items: items,
-              onChanged: (newValue) {
-                setState(() {
-                  widget.initialElement = newValue!;
-                  widget.value = newValue;
-                });
-              },
-              // onChanged: widget.onChanged,
-            ),
+            DropdownButtonFormField<dynamic>(
+                isExpanded: true,
+                // value: widget.initialElement,
+                items: items,
+                onChanged: (newValue) {
+                  setState(() {
+                    widget.initialElement = newValue!;
+                    widget.value = newValue;
+                    widget.onChanged(newValue);
+                  });
+                },
+                validator: widget.validator
+                // onChanged: widget.onChanged,
+                ),
           ],
         ),
       ),
