@@ -23,5 +23,9 @@ final addMoveHandler = Handler(handlerFunc: (context, params) {
   return const AddMoveView();
 });
 
+final accountHandler = Handler(handlerFunc: (context, params) {
+  return const AccountView();
+});
+
 // 404
 final pageNotFound = Handler(handlerFunc: (_, __) => const NotFoundView());

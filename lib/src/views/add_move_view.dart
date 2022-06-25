@@ -64,6 +64,7 @@ class _Form extends StatelessWidget {
                     if (value == '' || value == null) {
                       return 'Debe seleccionar una cuenta valida';
                     }
+                    return null;
                   },
                 ),
                 const SizedBox(
@@ -81,6 +82,7 @@ class _Form extends StatelessWidget {
                     if (value == '' || value == null) {
                       return 'Debe seleccionar una categoria valida';
                     }
+                    return null;
                   },
                 ),
                 const SizedBox(
@@ -101,6 +103,7 @@ class _Form extends StatelessWidget {
                         return 'El importe debe ser mayor a cero';
                       }
                     }
+                    return null;
                   },
                 ),
                 const SizedBox(
@@ -116,6 +119,7 @@ class _Form extends StatelessWidget {
                     if (value == '') {
                       return 'Debe indicar el nombre del movimiento.';
                     }
+                    return null;
                   },
                 ),
                 const SizedBox(
@@ -132,6 +136,7 @@ class _Form extends StatelessWidget {
                     if (value == '') {
                       return 'Debe indicar la fecha del movimiento.';
                     }
+                    return null;
                   },
                 ),
                 const SizedBox(
@@ -163,6 +168,7 @@ class _BotonRegresar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AddMoveProvider addMoveProvider = Provider.of<AddMoveProvider>(context);
     return Positioned(
       bottom: 10,
       left: 10,
@@ -174,6 +180,7 @@ class _BotonRegresar extends StatelessWidget {
           size: 40,
         ),
         onPressed: () {
+          addMoveProvider.isSaving = false;
           locator<NavigationService>().goBack('/moves');
         },
       ),
@@ -205,6 +212,7 @@ class _BotonGuardar extends StatelessWidget {
                 if (!addMoveProvider.isValidForm()) return;
                 addMoveProvider.isSaving = true;
                 final currentUser = FirebaseAuth.instance.currentUser;
+                // Agregar movimiento
                 await FirebaseFirestore.instance
                     .doc('users/${currentUser!.uid}')
                     .collection('moves')
@@ -217,6 +225,25 @@ class _BotonGuardar extends StatelessWidget {
                   'fecha': addMoveProvider.fecha,
                   'descripcion': addMoveProvider.descripcion
                 });
+                // Obtener datos de la cuenta
+                final DocumentSnapshot<Map<String, dynamic>> datosCuenta =
+                    await FirebaseFirestore.instance
+                        .doc('users/${currentUser.uid}')
+                        .collection('accounts')
+                        .doc(addMoveProvider.cuenta)
+                        .get();
+                // print(datosCuenta.data());
+                // Actualizar el saldo en la cuenta
+                final saldoFinal = addMoveProvider.isGasto
+                    ? double.parse("${datosCuenta.get('saldo')}") -
+                        double.parse("${addMoveProvider.importe}")
+                    : double.parse("${datosCuenta.get('saldo')}") +
+                        double.parse("${addMoveProvider.importe}");
+                await FirebaseFirestore.instance
+                    .doc('users/${currentUser.uid}')
+                    .collection('accounts')
+                    .doc(addMoveProvider.cuenta)
+                    .update({'saldo': saldoFinal});
                 addMoveProvider.isSaving = false;
                 locator<NavigationService>().goBack('/moves');
               },

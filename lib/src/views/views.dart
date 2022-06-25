@@ -4,3 +4,4 @@ export 'package:wallet2/src/views/moves_view.dart';
 export 'package:wallet2/src/views/settings_view.dart';
 export 'package:wallet2/src/views/login_view.dart';
 export 'package:wallet2/src/views/add_move_view.dart';
+export 'package:wallet2/src/views/account_view.dart';
