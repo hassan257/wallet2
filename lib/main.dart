@@ -29,6 +29,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => BottomNavigationProvider()),
         ChangeNotifierProvider(create: (_) => AddMoveProvider()),
+        ChangeNotifierProvider(create: (_) => AccountProvider()),
       ],
       child: MyApp(isLog: isLog),
     ));

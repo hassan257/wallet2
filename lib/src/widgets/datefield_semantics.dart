@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DateFieldSemantics extends StatefulWidget {
   const DateFieldSemantics(
@@ -57,6 +58,7 @@ class _DateFieldSemanticsState extends State<DateFieldSemantics> {
           )),
         ),
         child: TextFormField(
+            style: GoogleFonts.montserratAlternates(),
             controller: TextEditingController(text: value),
             onChanged: widget.onChanged,
             validator: widget.validator,
@@ -117,31 +119,31 @@ InputDecoration _inputDecoration(
     Function()? iconFunction}) {
   if (iconVisible) {
     return InputDecoration(
-      icon: GestureDetector(
-          onTap: iconFunction,
-          child: Icon(
-            icon,
+        icon: GestureDetector(
+            onTap: iconFunction,
+            child: Icon(
+              icon,
+              color: labelColor,
+            )),
+        label: Text(
+          label,
+          style: GoogleFonts.montserratAlternates(
             color: labelColor,
-          )),
-      label: Text(
-        label,
-        style: TextStyle(
-          color: labelColor,
-          fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      hintText: hintText,
-    );
+        hintText: hintText,
+        hintStyle: GoogleFonts.montserratAlternates());
   } else {
     return InputDecoration(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: labelColor,
-          fontWeight: FontWeight.bold,
+        label: Text(
+          label,
+          style: GoogleFonts.montserratAlternates(
+            color: labelColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      hintText: hintText,
-    );
+        hintText: hintText,
+        hintStyle: GoogleFonts.montserratAlternates());
   }
 }

@@ -3,12 +3,26 @@ import 'package:flutter/material.dart';
 class AddMoveProvider with ChangeNotifier {
   bool _isGasto = true;
   dynamic _cuenta = '';
-  dynamic _concepto = '';
+  dynamic _conceptoIngreso = '';
+  dynamic _conceptoGasto = '';
   dynamic _importe = '';
   dynamic _movimiento = '';
   dynamic _fecha = '';
   dynamic _descripcion = '';
   bool _isSaving = false;
+
+  reset() {
+    _isGasto = true;
+    _cuenta = '';
+    _conceptoIngreso = '';
+    _conceptoGasto = '';
+    _importe = '';
+    _movimiento = '';
+    _fecha = '';
+    _descripcion = '';
+    _isSaving = false;
+    notifyListeners();
+  }
 
   final GlobalKey<FormState> _key = GlobalKey<FormState>();
 
@@ -29,10 +43,17 @@ class AddMoveProvider with ChangeNotifier {
   }
 
   // ignore: unnecessary_getters_setters
-  dynamic get concepto => _concepto;
+  dynamic get conceptoIngreso => _conceptoIngreso;
 
-  set concepto(dynamic newValue) {
-    _concepto = newValue;
+  set conceptoIngreso(dynamic newValue) {
+    _conceptoIngreso = newValue;
+  }
+
+  // ignore: unnecessary_getters_setters
+  dynamic get conceptoGasto => _conceptoGasto;
+
+  set conceptoGasto(dynamic newValue) {
+    _conceptoGasto = newValue;
   }
 
   dynamic get importe => _importe;

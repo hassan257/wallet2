@@ -20,6 +20,8 @@ class Flurorouter {
         handler: addMoveHandler, transitionType: TransitionType.inFromRight);
     router.define('/account',
         handler: accountHandler, transitionType: TransitionType.inFromRight);
+    router.define('/account/:i',
+        handler: accountHandler, transitionType: TransitionType.inFromRight);
 
     // 404 - Not Page Found
     router.notFoundHandler = pageNotFound;

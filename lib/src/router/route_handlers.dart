@@ -24,7 +24,9 @@ final addMoveHandler = Handler(handlerFunc: (context, params) {
 });
 
 final accountHandler = Handler(handlerFunc: (context, params) {
-  return const AccountView();
+  return AccountView(
+    account: params['i']?[0],
+  );
 });
 
 // 404

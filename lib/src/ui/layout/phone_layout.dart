@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../locator.dart';
@@ -25,6 +26,8 @@ class PhoneLayout extends StatelessWidget {
           ? Semantics(
               label: 'Barra de Navegación',
               child: BottomNavigationBar(
+                selectedLabelStyle: GoogleFonts.montserratAlternates(),
+                unselectedLabelStyle: GoogleFonts.montserratAlternates(),
                 selectedItemColor: Colors.pinkAccent,
                 currentIndex: bottomNavigationProvider.index,
                 onTap: (int index) {

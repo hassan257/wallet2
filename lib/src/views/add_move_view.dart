@@ -32,6 +32,7 @@ class _Form extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     final size = MediaQuery.of(context).size;
+
     return SizedBox(
       height: size.height - 60,
       child: Padding(
@@ -44,20 +45,35 @@ class _Form extends StatelessWidget {
                 CustomSwitchTile(
                   opc1: 'Gasto',
                   opc2: 'Ingreso',
-                  function: (value) => {addMoveProvider.isGasto = value},
+                  function: (value) {
+                    addMoveProvider.isGasto = value;
+                    if (addMoveProvider.isGasto) {
+                      addMoveProvider.conceptoIngreso = null;
+                    } else {
+                      addMoveProvider.conceptoGasto = null;
+                    }
+                  },
                 ),
                 const SizedBox(
                   height: 20,
                 ),
-                CustomFutureCombobox(
-                  future: FirebaseFirestore.instance
+                CustomStreamCombobox(
+                  // future: FirebaseFirestore.instance
+                  //     .collection('users')
+                  //     .doc(currentUser!.uid)
+                  //     .collection('accounts')
+                  //     .get(),
+                  stream: FirebaseFirestore.instance
                       .collection('users')
                       .doc(currentUser!.uid)
                       .collection('accounts')
-                      .get(),
+                      .snapshots(),
                   label: 'Cuenta',
                   color: Colors.pinkAccent,
                   collection: true,
+                  value: addMoveProvider.cuenta == ''
+                      ? null
+                      : addMoveProvider.cuenta,
                   onChanged: (value) => {addMoveProvider.cuenta = value},
                   validator: (value) {
                     // print(value);
@@ -70,21 +86,61 @@ class _Form extends StatelessWidget {
                 const SizedBox(
                   height: 20,
                 ),
-                CustomFutureCombobox(
-                  future: FirebaseFirestore.instance
-                      .collection('catalogs')
-                      .doc('tipoConcepto')
-                      .get(),
-                  label: 'Categoria',
-                  color: Colors.pinkAccent,
-                  onChanged: (value) => {addMoveProvider.concepto = value},
-                  validator: (value) {
-                    if (value == '' || value == null) {
-                      return 'Debe seleccionar una categoria valida';
-                    }
-                    return null;
-                  },
-                ),
+                addMoveProvider.isGasto
+                    ? CustomStreamCombobox(
+                        // future: FirebaseFirestore.instance
+                        //     .collection('catalogs')
+                        //     .doc('tipoConcepto')
+                        //     .collection('movimientosGasto')
+                        //     .get(),
+                        stream: FirebaseFirestore.instance
+                            .collection('catalogs')
+                            .doc('tipoConcepto')
+                            .collection('movimientosGasto')
+                            .snapshots(),
+                        label: 'Categoria Gasto',
+                        collection: true,
+                        value: addMoveProvider.conceptoGasto == ''
+                            ? null
+                            : addMoveProvider.conceptoGasto,
+                        color: Colors.pinkAccent,
+                        onChanged: (value) =>
+                            {addMoveProvider.conceptoGasto = value},
+                        validator: (value) {
+                          if (value == '' || value == null) {
+                            return 'Debe seleccionar una categoria valida';
+                          }
+                          return null;
+                        },
+                      )
+                    : CustomStreamCombobox(
+                        // future: FirebaseFirestore.instance
+                        //     .collection('catalogs')
+                        //     .doc('tipoConcepto')
+                        //     .collection('movimientosIngreso')
+                        //     .get(),
+                        stream: FirebaseFirestore.instance
+                            .collection('catalogs')
+                            .doc('tipoConcepto')
+                            .collection('movimientosIngreso')
+                            .snapshots(),
+                        label: 'Categoria Ingreso',
+                        collection: true,
+                        color: Colors.pinkAccent,
+                        value: addMoveProvider.conceptoIngreso == ''
+                            ? null
+                            : addMoveProvider.conceptoIngreso,
+                        onChanged: (value) {
+                          // print(value);
+                          addMoveProvider.conceptoIngreso = value;
+                        },
+                        validator: (value) {
+                          if (value == '' || value == null) {
+                            return 'Debe seleccionar una categoria valida';
+                          }
+                          return null;
+                        },
+                      ),
                 const SizedBox(
                   height: 20,
                 ),
@@ -219,7 +275,9 @@ class _BotonGuardar extends StatelessWidget {
                     .add({
                   'tipo': addMoveProvider.isGasto ? 'GASTO' : 'INGRESO',
                   'cuenta': addMoveProvider.cuenta,
-                  'categoria': addMoveProvider.concepto,
+                  'categoria': addMoveProvider.isGasto
+                      ? addMoveProvider.conceptoGasto
+                      : addMoveProvider.conceptoIngreso,
                   'cantidad': addMoveProvider.importe,
                   'nombre': addMoveProvider.movimiento,
                   'fecha': addMoveProvider.fecha,

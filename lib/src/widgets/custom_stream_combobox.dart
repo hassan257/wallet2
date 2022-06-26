@@ -1,19 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ignore: must_be_immutable
-class CustomFutureCombobox extends StatelessWidget {
+class CustomStreamCombobox extends StatelessWidget {
   // ignore: prefer_typing_uninitialized_variables
-  final future;
+  // final future;
+  // ignore: prefer_typing_uninitialized_variables
+  final stream;
   final bool? collection;
   final Color? color;
   final String? label;
   dynamic value;
   final Function(dynamic) onChanged;
   final String? Function(dynamic)? validator;
-  CustomFutureCombobox(
+  CustomStreamCombobox(
       {Key? key,
-      required this.future,
+      // required this.future,
+      required this.stream,
       this.collection = false,
       this.color,
       this.label,
@@ -24,8 +28,9 @@ class CustomFutureCombobox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: future,
+    return StreamBuilder(
+      // future: future,
+      stream: stream,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         if (snapshot.hasData) {
           if (!collection!) {
@@ -33,7 +38,7 @@ class CustomFutureCombobox extends StatelessWidget {
             // print(elementos);
             return _Combobox(
                 elements: elementos,
-                initialElement: elementos[0]['id'],
+                // initialElement: elementos[0]['id'],
                 color: color,
                 label: label,
                 value: value,
@@ -49,7 +54,7 @@ class CustomFutureCombobox extends StatelessWidget {
             }
             return _Combobox(
               elements: elementos,
-              initialElement: elementos[0]['id'],
+              // initialElement: elementos[0]['id'],
               color: color,
               label: label,
               value: value,
@@ -75,11 +80,11 @@ class _Combobox extends StatefulWidget {
   dynamic value;
   final Function(dynamic) onChanged;
   final String? Function(dynamic)? validator;
-  dynamic initialElement;
+  // dynamic initialElement;
   _Combobox(
       {Key? key,
       required this.elements,
-      required this.initialElement,
+      // required this.initialElement,
       this.label,
       this.color,
       this.value,
@@ -115,18 +120,20 @@ class __ComboboxState extends State<_Combobox> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.label ?? '',
-              style:
-                  TextStyle(color: widget.color, fontWeight: FontWeight.bold),
-            ),
+            Text(widget.label ?? '',
+                style:
+                    // TextStyle(color: widget.color, fontWeight: FontWeight.bold),
+                    GoogleFonts.montserratAlternates(
+                        color: widget.color, fontWeight: FontWeight.bold)),
             DropdownButtonFormField<dynamic>(
                 isExpanded: true,
-                // value: widget.initialElement,
+                value: widget.value,
                 items: items,
+                style: GoogleFonts.montserratAlternates(
+                    color: Colors.blueGrey[600]),
                 onChanged: (newValue) {
                   setState(() {
-                    widget.initialElement = newValue!;
+                    // widget.initialElement = newValue!;
                     widget.value = newValue;
                     widget.onChanged(newValue);
                   });

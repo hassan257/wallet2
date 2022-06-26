@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TextFieldSemantics extends StatelessWidget {
   const TextFieldSemantics(
@@ -11,7 +12,8 @@ class TextFieldSemantics extends StatelessWidget {
       this.onChanged,
       this.icon,
       this.iconFunction,
-      this.validator})
+      this.validator,
+      this.enabled})
       : super(key: key);
 
   final String label;
@@ -23,6 +25,7 @@ class TextFieldSemantics extends StatelessWidget {
   final IconData? icon;
   final Function()? iconFunction;
   final String? Function(String?)? validator;
+  final bool? enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -49,16 +52,19 @@ class TextFieldSemantics extends StatelessWidget {
           // ],
           onChanged: onChanged,
           initialValue: initialValue,
+          enabled: enabled,
           decoration: _inputDecoration(
-              iconVisible: iconVisible,
-              label: label,
-              hintText: hintText,
-              icon: icon,
-              labelColor: labelColor,
-              iconFunction: iconFunction),
+            iconVisible: iconVisible,
+            label: label,
+            hintText: hintText,
+            icon: icon,
+            labelColor: labelColor,
+            iconFunction: iconFunction,
+          ),
           keyboardType: keyboardType,
           textCapitalization: TextCapitalization.sentences,
           validator: validator,
+          style: GoogleFonts.montserratAlternates(),
         ),
       ),
     );
@@ -82,23 +88,25 @@ InputDecoration _inputDecoration(
           )),
       label: Text(
         label,
-        style: TextStyle(
+        style: GoogleFonts.montserratAlternates(
           color: labelColor,
           fontWeight: FontWeight.bold,
         ),
       ),
       hintText: hintText,
+      hintStyle: GoogleFonts.montserratAlternates(),
     );
   } else {
     return InputDecoration(
       label: Text(
         label,
-        style: TextStyle(
+        style: GoogleFonts.montserratAlternates(
           color: labelColor,
           fontWeight: FontWeight.bold,
         ),
       ),
       hintText: hintText,
+      hintStyle: GoogleFonts.montserratAlternates(),
     );
   }
 }

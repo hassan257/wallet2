@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../locator.dart';
+import '../providers/providers.dart';
 import '../services/navigation_service.dart';
 import '../widgets/cuentas.dart';
 
@@ -10,6 +12,7 @@ class MovesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // final size = MediaQuery.of(context).size;
+    AddMoveProvider addMoveProvider = Provider.of<AddMoveProvider>(context);
     return SafeArea(
       child: Stack(
         children: [
@@ -29,6 +32,7 @@ class MovesView extends StatelessWidget {
                 size: 40,
               ),
               onPressed: () {
+                addMoveProvider.reset();
                 locator<NavigationService>().navigateTo('/addmove');
               },
             ),
