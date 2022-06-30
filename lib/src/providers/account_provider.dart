@@ -45,6 +45,7 @@ class AccountProvider with ChangeNotifier {
     return _key.currentState?.validate() ?? false;
   }
 
+  // ignore: unnecessary_getters_setters
   String get id => _id;
 
   set id(String newValue) {

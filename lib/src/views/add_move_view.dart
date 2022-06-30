@@ -58,6 +58,8 @@ class _Form extends StatelessWidget {
                   height: 20,
                 ),
                 CustomStreamCombobox(
+                  menuItemChild: 'nombre',
+                  menuItemValue: 'id',
                   // future: FirebaseFirestore.instance
                   //     .collection('users')
                   //     .doc(currentUser!.uid)
@@ -112,6 +114,8 @@ class _Form extends StatelessWidget {
                           }
                           return null;
                         },
+                        menuItemChild: 'nombre',
+                        menuItemValue: 'id',
                       )
                     : CustomStreamCombobox(
                         // future: FirebaseFirestore.instance
@@ -134,6 +138,8 @@ class _Form extends StatelessWidget {
                           // print(value);
                           addMoveProvider.conceptoIngreso = value;
                         },
+                        menuItemChild: 'nombre',
+                        menuItemValue: 'id',
                         validator: (value) {
                           if (value == '' || value == null) {
                             return 'Debe seleccionar una categoria valida';
@@ -268,16 +274,20 @@ class _BotonGuardar extends StatelessWidget {
                 if (!addMoveProvider.isValidForm()) return;
                 addMoveProvider.isSaving = true;
                 final currentUser = FirebaseAuth.instance.currentUser;
+                final cuentaSplit =
+                    addMoveProvider.cuenta.toString().split('\$');
+                final categoriaSplit = addMoveProvider.isGasto
+                    ? addMoveProvider.conceptoGasto.toString().split('\$')
+                    : addMoveProvider.conceptoIngreso.toString().split('\$');
                 // Agregar movimiento
                 await FirebaseFirestore.instance
                     .doc('users/${currentUser!.uid}')
                     .collection('moves')
                     .add({
                   'tipo': addMoveProvider.isGasto ? 'GASTO' : 'INGRESO',
-                  'cuenta': addMoveProvider.cuenta,
-                  'categoria': addMoveProvider.isGasto
-                      ? addMoveProvider.conceptoGasto
-                      : addMoveProvider.conceptoIngreso,
+                  // 'cuenta': addMoveProvider.cuenta,
+                  'cuenta': cuentaSplit[1],
+                  'categoria': categoriaSplit[1],
                   'cantidad': addMoveProvider.importe,
                   'nombre': addMoveProvider.movimiento,
                   'fecha': addMoveProvider.fecha,
@@ -288,7 +298,7 @@ class _BotonGuardar extends StatelessWidget {
                     await FirebaseFirestore.instance
                         .doc('users/${currentUser.uid}')
                         .collection('accounts')
-                        .doc(addMoveProvider.cuenta)
+                        .doc(cuentaSplit[0])
                         .get();
                 // print(datosCuenta.data());
                 // Actualizar el saldo en la cuenta
@@ -300,7 +310,7 @@ class _BotonGuardar extends StatelessWidget {
                 await FirebaseFirestore.instance
                     .doc('users/${currentUser.uid}')
                     .collection('accounts')
-                    .doc(addMoveProvider.cuenta)
+                    .doc(cuentaSplit[0])
                     .update({'saldo': saldoFinal});
                 addMoveProvider.isSaving = false;
                 locator<NavigationService>().goBack('/moves');

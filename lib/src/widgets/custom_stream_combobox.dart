@@ -14,6 +14,8 @@ class CustomStreamCombobox extends StatelessWidget {
   dynamic value;
   final Function(dynamic) onChanged;
   final String? Function(dynamic)? validator;
+  final String menuItemChild;
+  final String menuItemValue;
   CustomStreamCombobox(
       {Key? key,
       // required this.future,
@@ -23,7 +25,9 @@ class CustomStreamCombobox extends StatelessWidget {
       this.label,
       this.value,
       required this.onChanged,
-      this.validator})
+      this.validator,
+      required this.menuItemChild,
+      required this.menuItemValue})
       : super(key: key);
 
   @override
@@ -37,13 +41,16 @@ class CustomStreamCombobox extends StatelessWidget {
             final List<dynamic> elementos = snapshot.data!.get('tipos');
             // print(elementos);
             return _Combobox(
-                elements: elementos,
-                // initialElement: elementos[0]['id'],
-                color: color,
-                label: label,
-                value: value,
-                onChanged: onChanged,
-                validator: validator);
+              elements: elementos,
+              // initialElement: elementos[0]['id'],
+              color: color,
+              label: label,
+              value: value,
+              onChanged: onChanged,
+              validator: validator,
+              menuItemChild: menuItemChild,
+              menuItemValue: menuItemValue,
+            );
           } else {
             final List<QueryDocumentSnapshot> snapshotData =
                 snapshot.data!.docs;
@@ -60,6 +67,8 @@ class CustomStreamCombobox extends StatelessWidget {
               value: value,
               onChanged: onChanged,
               validator: validator,
+              menuItemChild: menuItemChild,
+              menuItemValue: menuItemValue,
             );
           }
         } else {
@@ -80,6 +89,8 @@ class _Combobox extends StatefulWidget {
   dynamic value;
   final Function(dynamic) onChanged;
   final String? Function(dynamic)? validator;
+  final String menuItemChild;
+  final String menuItemValue;
   // dynamic initialElement;
   _Combobox(
       {Key? key,
@@ -89,7 +100,9 @@ class _Combobox extends StatefulWidget {
       this.color,
       this.value,
       required this.onChanged,
-      this.validator})
+      this.validator,
+      required this.menuItemChild,
+      required this.menuItemValue})
       : super(key: key);
 
   @override
@@ -102,8 +115,11 @@ class __ComboboxState extends State<_Combobox> {
     List<DropdownMenuItem<dynamic>> items = [];
     for (var element in widget.elements) {
       items.add(DropdownMenuItem<dynamic>(
-        child: Text(element['nombre']),
-        value: element['id'],
+        // child: Text(element['nombre']),
+        // value: element['id'],
+        child: Text(element[widget.menuItemChild]),
+        value:
+            '${element[widget.menuItemValue]}\$${element[widget.menuItemChild]}',
       ));
     }
     return Semantics(

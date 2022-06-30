@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:wallet2/src/ui/layout/layouts.dart';
 
@@ -15,6 +16,7 @@ Future<void> main() async {
   setupLocator();
   Flurorouter.configureRoutes();
   await Firebase.initializeApp();
+  MobileAds.instance.initialize();
   bool isLog = false;
   FirebaseAuth.instance.idTokenChanges().listen((User? user) {
     if (user == null) {
@@ -30,6 +32,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => BottomNavigationProvider()),
         ChangeNotifierProvider(create: (_) => AddMoveProvider()),
         ChangeNotifierProvider(create: (_) => AccountProvider()),
+        ChangeNotifierProvider(create: (_) => MovesViewProvider()),
       ],
       child: MyApp(isLog: isLog),
     ));
@@ -60,7 +63,7 @@ class MyApp extends StatelessWidget {
         );
       },
       theme: themeProvider.currentTheme,
-      title: 'Material App',
+      title: 'PokeFin',
     );
   }
 }

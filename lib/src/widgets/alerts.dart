@@ -4,9 +4,9 @@ class Alerts {
   confirmDialog({
     required BuildContext context,
     required String message,
-    required Future<Null> Function()? button1Function,
+    required Future<void> Function()? button1Function,
     required String button1Text,
-    required Future<Null> Function()? button2Function,
+    required Future<void> Function()? button2Function,
     required String button2Text,
   }) {
     Widget button1 = TextButton(
