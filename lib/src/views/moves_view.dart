@@ -51,8 +51,6 @@ class _LayoutView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    MovesViewProvider movesViewProvider =
-        Provider.of<MovesViewProvider>(context);
     final currentUser = FirebaseAuth.instance.currentUser;
     final Stream<QuerySnapshot<Map<String, dynamic>>> stream = FirebaseFirestore
         .instance

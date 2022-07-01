@@ -16,7 +16,7 @@ Future<void> main() async {
   setupLocator();
   Flurorouter.configureRoutes();
   await Firebase.initializeApp();
-  MobileAds.instance.initialize();
+  await MobileAds.instance.initialize();
   bool isLog = false;
   FirebaseAuth.instance.idTokenChanges().listen((User? user) {
     if (user == null) {
