@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:wallet2/src/widgets/widgets.dart';
 
 import '../../../locator.dart';
 import '../../providers/providers.dart';
@@ -23,30 +24,57 @@ class PhoneLayout extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: (bottomNavigationProvider.isLog)
-          ? Semantics(
-              label: 'Barra de Navegación',
-              child: BottomNavigationBar(
-                selectedLabelStyle: GoogleFonts.montserratAlternates(),
-                unselectedLabelStyle: GoogleFonts.montserratAlternates(),
-                selectedItemColor: Colors.pinkAccent,
-                currentIndex: bottomNavigationProvider.index,
-                onTap: (int index) {
-                  bottomNavigationProvider.index = index;
-                  locator<NavigationService>().navigateTo(routes[index]);
-                },
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home),
-                    label: 'Inicio',
-                  ),
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.bar_chart), label: 'Movimientos'),
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.person), label: 'Preferencias')
+          ? SizedBox(
+              height: 150,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const BannerInlineWidget(),
+                  _CustomNavigationBar(
+                      bottomNavigationProvider: bottomNavigationProvider,
+                      routes: routes),
                 ],
               ),
             )
           : null,
+    );
+  }
+}
+
+class _CustomNavigationBar extends StatelessWidget {
+  const _CustomNavigationBar({
+    Key? key,
+    required this.bottomNavigationProvider,
+    required this.routes,
+  }) : super(key: key);
+
+  final BottomNavigationProvider bottomNavigationProvider;
+  final List<String> routes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Barra de Navegación',
+      child: BottomNavigationBar(
+        selectedLabelStyle: GoogleFonts.montserratAlternates(),
+        unselectedLabelStyle: GoogleFonts.montserratAlternates(),
+        selectedItemColor: Colors.pinkAccent,
+        currentIndex: bottomNavigationProvider.index,
+        onTap: (int index) {
+          bottomNavigationProvider.index = index;
+          locator<NavigationService>().navigateTo(routes[index]);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart), label: 'Movimientos'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: 'Preferencias')
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:wallet2/src/ui/layout/layouts.dart';
@@ -18,6 +19,8 @@ Future<void> main() async {
   await Firebase.initializeApp();
   await MobileAds.instance.initialize();
   bool isLog = false;
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   FirebaseAuth.instance.idTokenChanges().listen((User? user) {
     if (user == null) {
       isLog = false;
@@ -50,6 +53,7 @@ class MyApp extends StatelessWidget {
         Provider.of<BottomNavigationProvider>(context);
     bottomNavigationProvider.isLog = isLog;
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       initialRoute: (isLog) ? '/' : '/login',
       onGenerateRoute: Flurorouter.router.generator,
       navigatorKey: locator<NavigationService>().navigatorKey,

@@ -23,7 +23,7 @@ class MovesView extends StatelessWidget {
             children: const [Cuentas(), _MovesBar(), _LayoutView()],
           ),
           Positioned(
-            bottom: 10,
+            bottom: 0,
             right: 10,
             child: FloatingActionButton(
               backgroundColor: Colors.pinkAccent,
@@ -65,55 +65,123 @@ class _LayoutView extends StatelessWidget {
           final items = snapshot.data!.docs;
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            height: 400,
+            height: 360,
             child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    title: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Text(
-                              items[index].get('nombre'),
-                              style: GoogleFonts.montserratAlternates(
-                                  color: Colors.black54,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20),
-                            ),
-                            Text(
-                              "\$ ${items[index].get('cantidad')}",
-                              style: GoogleFonts.montserratAlternates(
-                                  color: items[index].get('tipo') == 'GASTO'
-                                      ? Colors.redAccent
-                                      : Colors.greenAccent),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Text(
-                              items[index].get('cuenta'),
-                              style: GoogleFonts.montserratAlternates(
-                                  color: Colors.black38,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  fontStyle: FontStyle.italic),
-                            ),
-                            Text(
-                              "${items[index].get('categoria')}",
-                              style: GoogleFonts.montserratAlternates(
-                                  color: Colors.black38,
-                                  fontSize: 14,
-                                  fontStyle: FontStyle.italic),
-                            )
-                          ],
-                        ),
-                      ],
+                  return Dismissible(
+                    key: ValueKey(items[index].id),
+                    background: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      color: Colors.red,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(
+                            width: 20,
+                          ),
+                          Text(
+                            'Eliminar',
+                            style: GoogleFonts.montserratAlternates(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
+                    ),
+                    secondaryBackground: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      color: Colors.blue,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Modificar',
+                            style: GoogleFonts.montserratAlternates(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(
+                            width: 20,
+                          ),
+                          const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                    onDismissed: (direction) {
+                      if (direction == DismissDirection.endToStart) {
+                        AddMoveProvider addMoveProvider =
+                            Provider.of<AddMoveProvider>(context,
+                                listen: false);
+                        addMoveProvider.reset();
+                        locator<NavigationService>().navigateTo('/addmove');
+                      } else {}
+                    },
+                    child: ListTile(
+                      dense: true,
+                      isThreeLine: true,
+                      title: Wrap(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                items[index].get('nombre'),
+                                style: GoogleFonts.montserratAlternates(
+                                    color: Colors.black54,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20),
+                              ),
+                              Text(
+                                "\$ ${items[index].get('cantidad')}",
+                                style: GoogleFonts.montserratAlternates(
+                                    color: items[index].get('tipo') == 'GASTO'
+                                        ? Colors.redAccent
+                                        : Colors.greenAccent,
+                                    fontWeight: FontWeight.bold),
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
+                      subtitle: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                "${items[index].get('fecha')}",
+                                style: GoogleFonts.montserratAlternates(
+                                    color: Colors.black38,
+                                    fontSize: 14,
+                                    fontStyle: FontStyle.italic),
+                              ),
+                              Text(
+                                "${items[index].get('categoria')}",
+                                softWrap: true,
+                                style: GoogleFonts.montserratAlternates(
+                                    color: Colors.black38,
+                                    fontSize: 14,
+                                    fontStyle: FontStyle.italic),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            items[index].get('cuenta'),
+                            style: GoogleFonts.montserratAlternates(
+                                color: Colors.black38,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

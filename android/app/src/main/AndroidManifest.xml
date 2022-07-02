@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hassansystems.wallet2">
+    <uses-permission android:name="android.permission.INTERNET"/>
    <application
-        android:label="wallet2"
+        android:label="PokeFin"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

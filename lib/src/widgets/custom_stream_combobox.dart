@@ -113,6 +113,8 @@ class __ComboboxState extends State<_Combobox> {
   @override
   Widget build(BuildContext context) {
     List<DropdownMenuItem<dynamic>> items = [];
+    widget.elements.sort(
+        (a, b) => a[widget.menuItemChild].compareTo(b[widget.menuItemChild]));
     for (var element in widget.elements) {
       items.add(DropdownMenuItem<dynamic>(
         // child: Text(element['nombre']),

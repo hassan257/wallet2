@@ -100,7 +100,7 @@ class _Form extends StatelessWidget {
                             .doc('tipoConcepto')
                             .collection('movimientosGasto')
                             .snapshots(),
-                        label: 'Categoria Gasto',
+                        label: 'Categoria',
                         collection: true,
                         value: addMoveProvider.conceptoGasto == ''
                             ? null
@@ -128,7 +128,7 @@ class _Form extends StatelessWidget {
                             .doc('tipoConcepto')
                             .collection('movimientosIngreso')
                             .snapshots(),
-                        label: 'Categoria Ingreso',
+                        label: 'Categoria',
                         collection: true,
                         color: Colors.pinkAccent,
                         value: addMoveProvider.conceptoIngreso == ''
@@ -161,7 +161,7 @@ class _Form extends StatelessWidget {
                       if (value == '') {
                         value = '0';
                       }
-                      if (int.parse(value) <= 0) {
+                      if (double.parse(value) <= 0) {
                         return 'El importe debe ser mayor a cero';
                       }
                     }

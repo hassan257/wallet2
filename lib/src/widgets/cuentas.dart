@@ -46,7 +46,7 @@ class Cuentas extends StatelessWidget {
             cuentas.sort((a, b) => a['nombre'].compareTo(b['nombre']));
             cuentas.add({'nombre': 'Agregar Cuenta', 'saldo': 0, 'tipo': 1});
             return CarouselSlider(
-              options: CarouselOptions(height: 130.0),
+              options: CarouselOptions(height: 100.0),
               items: cuentas.map((i) {
                 return Builder(
                   builder: (BuildContext context) {

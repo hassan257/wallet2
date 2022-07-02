@@ -63,6 +63,7 @@ class _BannerInlineWidgetState extends State<BannerInlineWidget> {
     // if (_isAdLoaded && index == _kAdIndex) {
     if (_isAdLoaded) {
       return Container(
+        // color: Colors.red,
         child: AdWidget(ad: _ad),
         width: _ad.size.width.toDouble(),
         height: 72.0,
@@ -71,7 +72,11 @@ class _BannerInlineWidgetState extends State<BannerInlineWidget> {
     } else {
       // final item = widget.entries[_getDestinationItemIndex(index)];
 
-      return Container();
+      return const SizedBox(
+        height: 72,
+        width: double.infinity,
+        // color: Colors.red,
+      );
     }
   }
 }
