@@ -8,6 +8,7 @@ import '../../locator.dart';
 import '../providers/providers.dart';
 import '../services/navigation_service.dart';
 import '../widgets/cuentas.dart';
+import '../widgets/widgets.dart';
 
 class MovesView extends StatelessWidget {
   const MovesView({Key? key}) : super(key: key);
@@ -19,8 +20,12 @@ class MovesView extends StatelessWidget {
     return SafeArea(
       child: Stack(
         children: [
-          Column(
-            children: const [Cuentas(), _MovesBar(), _LayoutView()],
+          Wrap(
+            children: [
+              Column(
+                children: const [Cuentas(), _MovesBar(), _LayoutView()],
+              ),
+            ],
           ),
           Positioned(
             bottom: 0,
@@ -69,6 +74,57 @@ class _LayoutView extends StatelessWidget {
             child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
                   return Dismissible(
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        await Alerts().confirmDialog(
+                            context: context,
+                            message: '¿Confirma eliminar el movimiento?',
+                            button1Function: () async {
+                              // Obtener datos de la cuenta
+                              final DocumentSnapshot<Map<String, dynamic>>
+                                  cuenta = await FirebaseFirestore.instance
+                                      .doc('users/${currentUser.uid}')
+                                      .collection('accounts')
+                                      .doc('${items[index].get('cuenta_id')}')
+                                      .get();
+                              final saldoMovimiento = (items[index]
+                                          .get('tipo') ==
+                                      'INGRESO')
+                                  ? double.parse(
+                                          "${items[index].get('cantidad')}") *
+                                      -1
+                                  : double.parse(
+                                      "${items[index].get('cantidad')}");
+                              final saldo =
+                                  double.parse("${cuenta.get('saldo')}") +
+                                      saldoMovimiento;
+                              // Actualizar el saldo
+                              await FirebaseFirestore.instance
+                                  .doc('users/${currentUser.uid}')
+                                  .collection('accounts')
+                                  .doc('${items[index].get('cuenta_id')}')
+                                  .update({'saldo': saldo});
+                              // Eliminar movimiento
+                              await FirebaseFirestore.instance
+                                  .doc('users/${currentUser.uid}')
+                                  .collection('moves')
+                                  .doc(items[index].id)
+                                  .delete();
+                              Navigator.pop(context);
+                              return null;
+                            },
+                            button1Text: 'Si',
+                            button2Function: () async {
+                              Navigator.pop(context);
+                              return null;
+                            },
+                            button2Text: 'No');
+                      } else {
+                        return true;
+                      }
+                      return null;
+                    },
+                    // direction: DismissDirection.startToEnd,
                     key: ValueKey(items[index].id),
                     background: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10),

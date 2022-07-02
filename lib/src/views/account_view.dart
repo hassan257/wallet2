@@ -308,12 +308,14 @@ class _MenuDelete extends StatelessWidget {
                             .collection('accounts')
                             .doc(id)
                             .delete();
+                        return null;
                       }
                     : null,
                 button1Text: 'Si',
                 button2Function: () async {
                   accountProvider.menuDelete = !accountProvider.menuDelete;
                   Navigator.pop(context);
+                  return null;
                 },
                 button2Text: 'No');
           },

@@ -287,6 +287,7 @@ class _BotonGuardar extends StatelessWidget {
                   'tipo': addMoveProvider.isGasto ? 'GASTO' : 'INGRESO',
                   // 'cuenta': addMoveProvider.cuenta,
                   'cuenta': cuentaSplit[1],
+                  'cuenta_id': cuentaSplit[0],
                   'categoria': categoriaSplit[1],
                   'cantidad': addMoveProvider.importe,
                   'nombre': addMoveProvider.movimiento,
