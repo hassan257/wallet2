@@ -55,6 +55,9 @@ class Cuentas extends StatelessWidget {
                           ? () {
                               accountProvider.reset();
                               accountProvider.id = i['id'];
+                              accountProvider.cuenta = i['nombre'];
+                              accountProvider.saldo = i['saldo'];
+                              // accountProvider.menuDelete = true;
                               // locator<NavigationService>()
                               //     .navigateTo('/account?i=${i['id']}');
                               locator<NavigationService>()

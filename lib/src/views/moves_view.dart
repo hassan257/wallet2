@@ -120,7 +120,40 @@ class _LayoutView extends StatelessWidget {
                             },
                             button2Text: 'No');
                       } else {
-                        return true;
+                        AddMoveProvider addMoveProvider =
+                            Provider.of<AddMoveProvider>(context,
+                                listen: false);
+                        addMoveProvider.reset();
+                        addMoveProvider.id = items[index].id;
+                        addMoveProvider.isGasto =
+                            (items[index].get('tipo') == 'GASTO')
+                                ? true
+                                : false;
+                        addMoveProvider.cuenta =
+                            "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
+                        if (items[index].get('tipo') == 'INGRESO') {
+                          addMoveProvider.conceptoIngreso =
+                              items[index].get('categoria_id') +
+                                  '\$' +
+                                  items[index].get('categoria');
+                          addMoveProvider.conceptoGasto = '';
+                        } else {
+                          addMoveProvider.conceptoIngreso = '';
+                          addMoveProvider.conceptoGasto =
+                              items[index].get('categoria_id') +
+                                  '\$' +
+                                  items[index].get('categoria');
+                        }
+                        addMoveProvider.importe = items[index].get('cantidad');
+                        addMoveProvider.movimiento = items[index].get('nombre');
+                        addMoveProvider.fecha = items[index].get('fecha');
+                        addMoveProvider.descripcion =
+                            items[index].get('descripcion');
+                        addMoveProvider.saldoAnterior =
+                            double.parse(items[index].get('cantidad'));
+                        addMoveProvider.tipoMovimientoAnterior =
+                            items[index].get('tipo');
+                        locator<NavigationService>().navigateTo('/addmove');
                       }
                       return null;
                     },
@@ -171,13 +204,38 @@ class _LayoutView extends StatelessWidget {
                       ),
                     ),
                     onDismissed: (direction) {
-                      if (direction == DismissDirection.endToStart) {
-                        AddMoveProvider addMoveProvider =
-                            Provider.of<AddMoveProvider>(context,
-                                listen: false);
-                        addMoveProvider.reset();
-                        locator<NavigationService>().navigateTo('/addmove');
-                      } else {}
+                      // if (direction == DismissDirection.endToStart) {
+                      //   AddMoveProvider addMoveProvider =
+                      //       Provider.of<AddMoveProvider>(context,
+                      //           listen: false);
+                      //   addMoveProvider.reset();
+                      //   addMoveProvider.id = items[index].id;
+                      //   addMoveProvider.isGasto =
+                      //       (items[index].get('tipo') == 'GASTO')
+                      //           ? true
+                      //           : false;
+                      //   addMoveProvider.cuenta =
+                      //       "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
+                      //   if (items[index].get('tipo') == 'INGRESO') {
+                      //     addMoveProvider.conceptoIngreso =
+                      //         items[index].get('categoria_id') +
+                      //             '\$' +
+                      //             items[index].get('categoria');
+                      //     addMoveProvider.conceptoGasto = '';
+                      //   } else {
+                      //     addMoveProvider.conceptoIngreso = '';
+                      //     addMoveProvider.conceptoGasto =
+                      //         items[index].get('categoria_id') +
+                      //             '\$' +
+                      //             items[index].get('categoria');
+                      //   }
+                      //   addMoveProvider.importe = items[index].get('cantidad');
+                      //   addMoveProvider.movimiento = items[index].get('nombre');
+                      //   addMoveProvider.fecha = items[index].get('fecha');
+                      //   addMoveProvider.descripcion =
+                      //       items[index].get('descripcion');
+                      //   locator<NavigationService>().navigateTo('/addmove');
+                      // } else {}
                     },
                     child: ListTile(
                       dense: true,

@@ -5,11 +5,13 @@ class CustomSwitchTile extends StatefulWidget {
   final String opc1;
   final String opc2;
   final Function(bool)? function;
+  final bool? initialValue;
   const CustomSwitchTile({
     Key? key,
     required this.opc1,
     required this.opc2,
     this.function,
+    this.initialValue = true,
   }) : super(key: key);
 
   @override
@@ -18,6 +20,13 @@ class CustomSwitchTile extends StatefulWidget {
 
 class _CustomSwitchTileState extends State<CustomSwitchTile> {
   bool opc1Active = true;
+
+  @override
+  void initState() {
+    super.initState();
+    opc1Active = widget.initialValue!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Semantics(

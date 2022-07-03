@@ -26,7 +26,7 @@ class AccountView extends StatelessWidget {
           if (accountProvider.id == '') const _Form() else const _StreamForm(),
           if (accountProvider.menuDelete) const _MenuDelete(),
           const _BotonRegresar(),
-          if (account == null)
+          if (accountProvider.id == '')
             const _BotonGuardar()
           else
             const _BotonModificar(),
@@ -103,7 +103,9 @@ class _Form extends StatelessWidget {
           backgroundColor: Colors.pinkAccent,
           leading: GestureDetector(
               onTap: () {
-                accountProvider.menuDelete = !accountProvider.menuDelete;
+                if (accountProvider.id != '') {
+                  accountProvider.menuDelete = !accountProvider.menuDelete;
+                }
                 // print('nuevo valor ${accountProvider.menuDelete}');
               },
               child: const Icon(Icons.menu)),
@@ -196,6 +198,7 @@ class _BotonGuardar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // print('Boton Guardar');
     AccountProvider accountProvider = Provider.of<AccountProvider>(context);
     return Positioned(
       bottom: 10,
@@ -239,6 +242,7 @@ class _BotonModificar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // print('Boton Modificar');
     AccountProvider accountProvider = Provider.of<AccountProvider>(context);
     return Positioned(
       bottom: 10,
@@ -256,12 +260,28 @@ class _BotonModificar extends StatelessWidget {
                   if (!accountProvider.isValidForm()) return;
                   accountProvider.isSaving = true;
                   final currentUser = FirebaseAuth.instance.currentUser;
-                  // Agregar movimiento
+                  // Modificar cuenta
                   await FirebaseFirestore.instance
                       .doc('users/${currentUser!.uid}')
                       .collection('accounts')
                       .doc(accountProvider.id)
                       .update({'nombre': accountProvider.cuenta});
+                  // Obtener los movimientos ligados a la cuenta
+                  final QuerySnapshot<Map<String, dynamic>> movimientos =
+                      await FirebaseFirestore.instance
+                          .doc('users/${currentUser.uid}')
+                          .collection('moves')
+                          .where('cuenta_id', isEqualTo: accountProvider.id)
+                          .get();
+                  // Actualizar el nombre de la cuenta en los movimientos ya registrados
+                  // ignore: avoid_function_literals_in_foreach_calls
+                  movimientos.docs.forEach((element) async {
+                    await FirebaseFirestore.instance
+                        .doc('users/${currentUser.uid}')
+                        .collection('moves')
+                        .doc(element.id)
+                        .update({'cuenta': accountProvider.cuenta});
+                  });
 
                   accountProvider.isSaving = false;
                   locator<NavigationService>().goBack('/moves');

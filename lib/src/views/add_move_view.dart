@@ -13,9 +13,17 @@ class AddMoveView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AddMoveProvider addMoveProvider = Provider.of<AddMoveProvider>(context);
     return SafeArea(
       child: Stack(
-        children: const [_Form(), _BotonGuardar(), _BotonRegresar()],
+        children: [
+          const _Form(),
+          if (addMoveProvider.id == '')
+            const _BotonGuardar()
+          else
+            const _BotonModificar(),
+          const _BotonRegresar()
+        ],
       ),
     );
   }
@@ -53,6 +61,7 @@ class _Form extends StatelessWidget {
                       addMoveProvider.conceptoGasto = null;
                     }
                   },
+                  initialValue: addMoveProvider.isGasto,
                 ),
                 const SizedBox(
                   height: 20,
@@ -167,6 +176,7 @@ class _Form extends StatelessWidget {
                     }
                     return null;
                   },
+                  initialValue: addMoveProvider.importe,
                 ),
                 const SizedBox(
                   height: 20,
@@ -183,6 +193,7 @@ class _Form extends StatelessWidget {
                     }
                     return null;
                   },
+                  initialValue: addMoveProvider.movimiento,
                 ),
                 const SizedBox(
                   height: 20,
@@ -200,6 +211,7 @@ class _Form extends StatelessWidget {
                     }
                     return null;
                   },
+                  initialValue: addMoveProvider.fecha,
                 ),
                 const SizedBox(
                   height: 20,
@@ -210,6 +222,7 @@ class _Form extends StatelessWidget {
                   labelColor: Colors.pinkAccent,
                   keyboardType: TextInputType.text,
                   onChanged: (value) => {addMoveProvider.descripcion = value},
+                  initialValue: addMoveProvider.descripcion,
                 ),
                 const SizedBox(
                   height: 100,
@@ -289,6 +302,7 @@ class _BotonGuardar extends StatelessWidget {
                   'cuenta': cuentaSplit[1],
                   'cuenta_id': cuentaSplit[0],
                   'categoria': categoriaSplit[1],
+                  'categoria_id': categoriaSplit[0],
                   'cantidad': addMoveProvider.importe,
                   'nombre': addMoveProvider.movimiento,
                   'fecha': addMoveProvider.fecha,
@@ -308,6 +322,85 @@ class _BotonGuardar extends StatelessWidget {
                         double.parse("${addMoveProvider.importe}")
                     : double.parse("${datosCuenta.get('saldo')}") +
                         double.parse("${addMoveProvider.importe}");
+                await FirebaseFirestore.instance
+                    .doc('users/${currentUser.uid}')
+                    .collection('accounts')
+                    .doc(cuentaSplit[0])
+                    .update({'saldo': saldoFinal});
+                addMoveProvider.isSaving = false;
+                locator<NavigationService>().goBack('/moves');
+              },
+      ),
+    );
+  }
+}
+
+class _BotonModificar extends StatelessWidget {
+  const _BotonModificar({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    AddMoveProvider addMoveProvider = Provider.of<AddMoveProvider>(context);
+    return Positioned(
+      bottom: 10,
+      right: 10,
+      child: FloatingActionButton(
+        backgroundColor: Colors.pinkAccent,
+        heroTag: 'storeMove',
+        child: const Icon(
+          Icons.save,
+          size: 40,
+        ),
+        onPressed: addMoveProvider.isSaving
+            ? null
+            : () async {
+                if (!addMoveProvider.isValidForm()) return;
+                addMoveProvider.isSaving = true;
+                final currentUser = FirebaseAuth.instance.currentUser;
+                final cuentaSplit =
+                    addMoveProvider.cuenta.toString().split('\$');
+                final categoriaSplit = addMoveProvider.isGasto
+                    ? addMoveProvider.conceptoGasto.toString().split('\$')
+                    : addMoveProvider.conceptoIngreso.toString().split('\$');
+                // Agregar movimiento
+                await FirebaseFirestore.instance
+                    .doc('users/${currentUser!.uid}')
+                    .collection('moves')
+                    .doc(addMoveProvider.id)
+                    .update({
+                  'tipo': addMoveProvider.isGasto ? 'GASTO' : 'INGRESO',
+                  // 'cuenta': addMoveProvider.cuenta,
+                  'cuenta': cuentaSplit[1],
+                  'cuenta_id': cuentaSplit[0],
+                  'categoria': categoriaSplit[1],
+                  'categoria_id': categoriaSplit[0],
+                  'cantidad': addMoveProvider.importe,
+                  'nombre': addMoveProvider.movimiento,
+                  'fecha': addMoveProvider.fecha,
+                  'descripcion': addMoveProvider.descripcion
+                });
+                // Obtener datos de la cuenta
+                final DocumentSnapshot<Map<String, dynamic>> datosCuenta =
+                    await FirebaseFirestore.instance
+                        .doc('users/${currentUser.uid}')
+                        .collection('accounts')
+                        .doc(cuentaSplit[0])
+                        .get();
+                // print(datosCuenta.data());
+                // Actualizar el saldo en la cuenta
+                double saldoFinal = addMoveProvider.isGasto
+                    ? double.parse("${datosCuenta.get('saldo')}") -
+                        double.parse("${addMoveProvider.importe}")
+                    : double.parse("${datosCuenta.get('saldo')}") +
+                        double.parse("${addMoveProvider.importe}");
+                //  Agregar o restar el saldo anterior al saldo final
+                if (addMoveProvider.tipoMovimientoAnterior == 'GASTO') {
+                  saldoFinal += addMoveProvider.saldoAnterior;
+                } else {
+                  saldoFinal -= addMoveProvider.saldoAnterior;
+                }
                 await FirebaseFirestore.instance
                     .doc('users/${currentUser.uid}')
                     .collection('accounts')

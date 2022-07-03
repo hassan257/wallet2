@@ -10,6 +10,11 @@ class AddMoveProvider with ChangeNotifier {
   dynamic _fecha = '';
   dynamic _descripcion = '';
   bool _isSaving = false;
+  String _id = '';
+
+  // Validos solo para la modificación
+  double _saldoAnterior = 0;
+  String _tipoMovimientoAnterior = '';
 
   reset() {
     _isGasto = true;
@@ -21,6 +26,8 @@ class AddMoveProvider with ChangeNotifier {
     _fecha = '';
     _descripcion = '';
     _isSaving = false;
+    _id = '';
+    _saldoAnterior = 0;
     notifyListeners();
   }
 
@@ -96,5 +103,27 @@ class AddMoveProvider with ChangeNotifier {
 
   bool isValidForm() {
     return _key.currentState?.validate() ?? false;
+  }
+
+  // ignore: unnecessary_getters_setters
+  String get id => _id;
+
+  set id(String newValue) {
+    _id = newValue;
+    // notifyListeners();
+  }
+
+  // ignore: unnecessary_getters_setters
+  double get saldoAnterior => _saldoAnterior;
+
+  set saldoAnterior(double valor) {
+    _saldoAnterior = valor;
+  }
+
+  // ignore: unnecessary_getters_setters
+  String get tipoMovimientoAnterior => _tipoMovimientoAnterior;
+
+  set tipoMovimientoAnterior(String valor) {
+    _tipoMovimientoAnterior = valor;
   }
 }

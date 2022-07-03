@@ -40,6 +40,11 @@ class _DateFieldSemanticsState extends State<DateFieldSemantics> {
     }
     String value =
         '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+    if (widget.initialValue != null) {
+      if (widget.initialValue != '') {
+        value = widget.initialValue!;
+      }
+    }
     setState(() {
       widget.onChanged(value);
     });
@@ -79,7 +84,7 @@ class _DateFieldSemanticsState extends State<DateFieldSemantics> {
                 });
               }
             },
-            // initialValue: value,
+            // initialValue: widget.initialValue,
             decoration: _inputDecoration(
               iconVisible: iconVisible,
               label: widget.label,
