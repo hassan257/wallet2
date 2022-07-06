@@ -56,12 +56,45 @@ class _LayoutView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    MovesViewProvider movesViewProvider =
+        Provider.of<MovesViewProvider>(context);
     final currentUser = FirebaseAuth.instance.currentUser;
-    final Stream<QuerySnapshot<Map<String, dynamic>>> stream = FirebaseFirestore
+    Stream<QuerySnapshot<Map<String, dynamic>>> stream = FirebaseFirestore
         .instance
         .doc('users/${currentUser!.uid}')
         .collection('moves')
         .snapshots();
+    switch (movesViewProvider.index) {
+      case 0:
+        stream = FirebaseFirestore.instance
+            .doc('users/${currentUser.uid}')
+            .collection('moves')
+            .orderBy('fecha', descending: true)
+            .snapshots();
+        break;
+      case 1:
+        stream = FirebaseFirestore.instance
+            .doc('users/${currentUser.uid}')
+            .collection('moves')
+            // .orderBy('fecha', descending: true)
+            .where('tipo', isEqualTo: 'GASTO')
+            .snapshots();
+        break;
+      case 2:
+        stream = FirebaseFirestore.instance
+            .doc('users/${currentUser.uid}')
+            .collection('moves')
+            // .orderBy('fecha', descending: true)
+            .where('tipo', isEqualTo: 'INGRESO')
+            .snapshots();
+        break;
+      default:
+        stream = FirebaseFirestore.instance
+            .doc('users/${currentUser.uid}')
+            .collection('moves')
+            .orderBy('fecha', descending: true)
+            .snapshots();
+    }
     return StreamBuilder(
       stream: stream,
       builder: (BuildContext context,
@@ -73,6 +106,11 @@ class _LayoutView extends StatelessWidget {
             height: 360,
             child: ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
+                  // final fecha = DateTime.parse(items[index].get('fecha'));
+                  final Timestamp fechaTimestamp = items[index].get('fecha');
+                  final DateTime fechaDateTime = fechaTimestamp.toDate();
+                  final String fecha =
+                      "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
                   return Dismissible(
                     confirmDismiss: (direction) async {
                       if (direction == DismissDirection.startToEnd) {
@@ -270,7 +308,7 @@ class _LayoutView extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               Text(
-                                "${items[index].get('fecha')}",
+                                fecha,
                                 style: GoogleFonts.montserratAlternates(
                                     color: Colors.black38,
                                     fontSize: 14,

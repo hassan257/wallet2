@@ -30,7 +30,8 @@ class DateFieldSemantics extends StatefulWidget {
 }
 
 class _DateFieldSemanticsState extends State<DateFieldSemantics> {
-  DateTime selectedDate = DateTime.now();
+  // DateTime selectedDate = DateTime.now();
+  late DateTime selectedDate;
 
   @override
   Widget build(BuildContext context) {
@@ -38,16 +39,15 @@ class _DateFieldSemanticsState extends State<DateFieldSemantics> {
     if (widget.icon != null) {
       iconVisible = true;
     }
-    String value =
-        '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+    String value = '';
     if (widget.initialValue != null) {
       if (widget.initialValue != '') {
         value = widget.initialValue!;
       }
     }
-    setState(() {
-      widget.onChanged(value);
-    });
+    // setState(() {
+    //   widget.onChanged(value);
+    // });
     // print(value);
     return Semantics(
       label: widget.label,

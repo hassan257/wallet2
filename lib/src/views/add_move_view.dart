@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:wallet2/src/providers/providers.dart';
 
 import '../../locator.dart';
+import '../helpers/ad_helper.dart';
 import '../services/navigation_service.dart';
 import '../widgets/widgets.dart';
 
@@ -40,6 +43,11 @@ class _Form extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     final size = MediaQuery.of(context).size;
+
+    final Timestamp fechaTimestamp = addMoveProvider.fecha;
+    final DateTime fechaDateTime = fechaTimestamp.toDate();
+    addMoveProvider.fechaString =
+        "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
 
     return SizedBox(
       height: size.height - 60,
@@ -198,21 +206,21 @@ class _Form extends StatelessWidget {
                 const SizedBox(
                   height: 20,
                 ),
-                DateFieldSemantics(
-                  label: 'Fecha del Movimiento',
-                  hintText: 'Fecha del Movimiento',
-                  labelColor: Colors.pinkAccent,
-                  keyboardType: TextInputType.datetime,
-                  icon: Icons.date_range,
-                  onChanged: (value) => {addMoveProvider.fecha = value},
-                  validator: (value) {
-                    if (value == '') {
-                      return 'Debe indicar la fecha del movimiento.';
-                    }
-                    return null;
-                  },
-                  initialValue: addMoveProvider.fecha,
-                ),
+                _CustomDateField(
+                    fechaString: addMoveProvider.fechaString,
+                    function: () async {
+                      final DateTime? selected = await showDatePicker(
+                        context: context,
+                        initialDate: addMoveProvider.fecha.toDate(),
+                        firstDate: DateTime(2010),
+                        lastDate: DateTime(2025),
+                      );
+                      if (selected != null) {
+                        addMoveProvider.fecha = Timestamp.fromDate(selected);
+                        addMoveProvider.fechaString =
+                            '${selected.day}/${selected.month}/${selected.year}';
+                      }
+                    }),
                 const SizedBox(
                   height: 20,
                 ),
@@ -231,6 +239,54 @@ class _Form extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CustomDateField extends StatelessWidget {
+  final String fechaString;
+  final void Function()? function;
+  const _CustomDateField({required this.fechaString, required this.function});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(right: 10, left: 10, bottom: 15, top: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        border: const Border.fromBorderSide(BorderSide(
+          color: Colors.pinkAccent,
+        )),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Fecha del Movimiento',
+            style: GoogleFonts.montserratAlternates(
+                color: Colors.pinkAccent, fontWeight: FontWeight.bold),
+          ),
+          GestureDetector(
+            onTap: function,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.calendar_month,
+                  size: 40,
+                  color: Colors.pinkAccent,
+                ),
+                const SizedBox(width: 20),
+                Text(
+                  fechaString,
+                  style: GoogleFonts.montserratAlternates(
+                      // color: Colors.pinkAccent
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -292,6 +348,11 @@ class _BotonGuardar extends StatelessWidget {
                 final categoriaSplit = addMoveProvider.isGasto
                     ? addMoveProvider.conceptoGasto.toString().split('\$')
                     : addMoveProvider.conceptoIngreso.toString().split('\$');
+                // Parsear fecha
+                // final fecha = addMoveProvider.fecha.toString().split('/');
+                // final DateTime fechaDT = DateTime(int.parse(fecha[2]),
+                //     int.parse(fecha[1]), int.parse(fecha[0]));
+                // final Timestamp fechaT = Timestamp.fromDate(fechaDT);
                 // Agregar movimiento
                 await FirebaseFirestore.instance
                     .doc('users/${currentUser!.uid}')
@@ -335,13 +396,53 @@ class _BotonGuardar extends StatelessWidget {
   }
 }
 
-class _BotonModificar extends StatelessWidget {
+class _BotonModificar extends StatefulWidget {
   const _BotonModificar({
     Key? key,
   }) : super(key: key);
 
   @override
+  State<_BotonModificar> createState() => _BotonModificarState();
+}
+
+class _BotonModificarState extends State<_BotonModificar> {
+  InterstitialAd? _interstitialAd;
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: AdHelper.interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              // _moveToHome();
+              locator<NavigationService>().goBack('/moves');
+            },
+          );
+
+          setState(() {
+            _interstitialAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          // ignore: avoid_print
+          print('Failed to load an interstitial ad: ${err.message}');
+          // _isInterstitialAdReady = false;
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _loadInterstitialAd();
     AddMoveProvider addMoveProvider = Provider.of<AddMoveProvider>(context);
     return Positioned(
       bottom: 10,
@@ -364,7 +465,12 @@ class _BotonModificar extends StatelessWidget {
                 final categoriaSplit = addMoveProvider.isGasto
                     ? addMoveProvider.conceptoGasto.toString().split('\$')
                     : addMoveProvider.conceptoIngreso.toString().split('\$');
-                // Agregar movimiento
+                // Parsear fecha
+                // final fecha = addMoveProvider.fecha.toString().split('/');
+                // final DateTime fechaDT = DateTime(int.parse(fecha[2]),
+                //     int.parse(fecha[1]), int.parse(fecha[0]));
+                // final Timestamp fechaT = Timestamp.fromDate(fechaDT);
+                // Actualizar movimiento
                 await FirebaseFirestore.instance
                     .doc('users/${currentUser!.uid}')
                     .collection('moves')
@@ -407,7 +513,12 @@ class _BotonModificar extends StatelessWidget {
                     .doc(cuentaSplit[0])
                     .update({'saldo': saldoFinal});
                 addMoveProvider.isSaving = false;
-                locator<NavigationService>().goBack('/moves');
+                // locator<NavigationService>().goBack('/moves');
+                if (_interstitialAd != null) {
+                  _interstitialAd?.show();
+                } else {
+                  locator<NavigationService>().goBack('/moves');
+                }
               },
       ),
     );

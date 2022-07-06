@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../../locator.dart';
+import '../helpers/ad_helper.dart';
 import '../providers/providers.dart';
 import '../services/navigation_service.dart';
 import '../widgets/widgets.dart';
@@ -15,23 +17,30 @@ class AccountView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AccountProvider accountProvider = Provider.of<AccountProvider>(context);
+    return const SafeArea(
+      child: _Body(),
+    );
+  }
+}
 
-    // if (account != null) {
-    //   accountProvider.id = account!;
-    // }
-    return SafeArea(
-      child: Stack(
-        children: [
-          if (accountProvider.id == '') const _Form() else const _StreamForm(),
-          if (accountProvider.menuDelete) const _MenuDelete(),
-          const _BotonRegresar(),
-          if (accountProvider.id == '')
-            const _BotonGuardar()
-          else
-            const _BotonModificar(),
-        ],
-      ),
+class _Body extends StatelessWidget {
+  const _Body({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    AccountProvider accountProvider = Provider.of<AccountProvider>(context);
+    return Stack(
+      children: [
+        if (accountProvider.id == '') const _Form() else const _StreamForm(),
+        if (accountProvider.menuDelete) const _MenuDelete(),
+        const _BotonRegresar(),
+        if (accountProvider.id == '')
+          const _BotonGuardar()
+        else
+          const _BotonModificar(),
+      ],
     );
   }
 }
@@ -191,14 +200,54 @@ class _BotonRegresar extends StatelessWidget {
   }
 }
 
-class _BotonGuardar extends StatelessWidget {
+class _BotonGuardar extends StatefulWidget {
   const _BotonGuardar({
     Key? key,
   }) : super(key: key);
 
   @override
+  State<_BotonGuardar> createState() => _BotonGuardarState();
+}
+
+class _BotonGuardarState extends State<_BotonGuardar> {
+  InterstitialAd? _interstitialAd;
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: AdHelper.interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              // _moveToHome();
+              locator<NavigationService>().goBack('/moves');
+            },
+          );
+
+          setState(() {
+            _interstitialAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          // ignore: avoid_print
+          print('Failed to load an interstitial ad: ${err.message}');
+          // _isInterstitialAdReady = false;
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // print('Boton Guardar');
+    _loadInterstitialAd();
     AccountProvider accountProvider = Provider.of<AccountProvider>(context);
     return Positioned(
       bottom: 10,
@@ -226,14 +275,19 @@ class _BotonGuardar extends StatelessWidget {
                   });
 
                   accountProvider.isSaving = false;
-                  locator<NavigationService>().goBack('/moves');
+                  // locator<NavigationService>().goBack('/moves');
+                  if (_interstitialAd != null) {
+                    _interstitialAd?.show();
+                  } else {
+                    locator<NavigationService>().goBack('/moves');
+                  }
                 }
               : null),
     );
   }
 }
 
-class _BotonModificar extends StatelessWidget {
+class _BotonModificar extends StatefulWidget {
   // final String id;
   const _BotonModificar({
     Key? key,
@@ -241,8 +295,47 @@ class _BotonModificar extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<_BotonModificar> createState() => _BotonModificarState();
+}
+
+class _BotonModificarState extends State<_BotonModificar> {
+  InterstitialAd? _interstitialAd;
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: AdHelper.interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              // _moveToHome();
+              locator<NavigationService>().goBack('/moves');
+            },
+          );
+
+          setState(() {
+            _interstitialAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          // ignore: avoid_print
+          print('Failed to load an interstitial ad: ${err.message}');
+          // _isInterstitialAdReady = false;
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // print('Boton Modificar');
+    _loadInterstitialAd();
     AccountProvider accountProvider = Provider.of<AccountProvider>(context);
     return Positioned(
       bottom: 10,
@@ -284,14 +377,19 @@ class _BotonModificar extends StatelessWidget {
                   });
 
                   accountProvider.isSaving = false;
-                  locator<NavigationService>().goBack('/moves');
+                  // locator<NavigationService>().goBack('/moves');
+                  if (_interstitialAd != null) {
+                    _interstitialAd?.show();
+                  } else {
+                    locator<NavigationService>().goBack('/moves');
+                  }
                 }
               : null),
     );
   }
 }
 
-class _MenuDelete extends StatelessWidget {
+class _MenuDelete extends StatefulWidget {
   // final String id;
   const _MenuDelete({
     Key? key,
@@ -299,7 +397,47 @@ class _MenuDelete extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<_MenuDelete> createState() => _MenuDeleteState();
+}
+
+class _MenuDeleteState extends State<_MenuDelete> {
+  InterstitialAd? _interstitialAd;
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: AdHelper.interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              // _moveToHome();
+              locator<NavigationService>().goBack('/moves');
+            },
+          );
+
+          setState(() {
+            _interstitialAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          // ignore: avoid_print
+          print('Failed to load an interstitial ad: ${err.message}');
+          // _isInterstitialAdReady = false;
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _loadInterstitialAd();
     AccountProvider accountProvider = Provider.of<AccountProvider>(context);
     return Positioned(
       top: 56,
@@ -322,12 +460,18 @@ class _MenuDelete extends StatelessWidget {
                         final id = accountProvider.id;
                         accountProvider.reset();
                         Navigator.pop(context);
-                        locator<NavigationService>().goBack('/moves');
+                        // locator<NavigationService>().goBack('/moves');
+                        if (_interstitialAd != null) {
+                          _interstitialAd?.show();
+                        } else {
+                          locator<NavigationService>().goBack('/moves');
+                        }
                         await FirebaseFirestore.instance
                             .doc('users/${currentUser!.uid}')
                             .collection('accounts')
                             .doc(id)
                             .delete();
+                        locator<NavigationService>().goBack('/moves');
                         return null;
                       }
                     : null,

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class AddMoveProvider with ChangeNotifier {
@@ -7,7 +8,8 @@ class AddMoveProvider with ChangeNotifier {
   dynamic _conceptoGasto = '';
   dynamic _importe = '';
   dynamic _movimiento = '';
-  dynamic _fecha = '';
+  Timestamp _fecha = Timestamp.now();
+  String _fechaString = '';
   dynamic _descripcion = '';
   bool _isSaving = false;
   String _id = '';
@@ -23,11 +25,12 @@ class AddMoveProvider with ChangeNotifier {
     _conceptoGasto = '';
     _importe = '';
     _movimiento = '';
-    _fecha = '';
+    _fecha = Timestamp.now();
     _descripcion = '';
     _isSaving = false;
     _id = '';
     _saldoAnterior = 0;
+    _fechaString = '';
     notifyListeners();
   }
 
@@ -78,10 +81,18 @@ class AddMoveProvider with ChangeNotifier {
   }
 
   // ignore: unnecessary_getters_setters
-  dynamic get fecha => _fecha;
+  Timestamp get fecha => _fecha;
 
-  set fecha(dynamic newValue) {
+  set fecha(Timestamp newValue) {
     _fecha = newValue;
+    notifyListeners();
+  }
+
+  // ignore: unnecessary_getters_setters
+  String get fechaString => _fechaString;
+
+  set fechaString(String newValue) {
+    _fechaString = newValue;
     // notifyListeners();
   }
 
