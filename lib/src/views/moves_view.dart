@@ -59,294 +59,349 @@ class _LayoutView extends StatelessWidget {
     MovesViewProvider movesViewProvider =
         Provider.of<MovesViewProvider>(context);
     final currentUser = FirebaseAuth.instance.currentUser;
-    Stream<QuerySnapshot<Map<String, dynamic>>> stream = FirebaseFirestore
-        .instance
+    final Timestamp fechaInicial = Timestamp.fromDate(DateTime(
+        movesViewProvider.currentDate.year,
+        movesViewProvider.currentDate.month));
+    final Timestamp fechaFinal = Timestamp.fromDate(DateTime(
+        movesViewProvider.currentDate.year,
+        movesViewProvider.currentDate.month + 1));
+    Query<Map<String, dynamic>> stream = FirebaseFirestore.instance
         .doc('users/${currentUser!.uid}')
-        .collection('moves')
-        .snapshots();
+        .collection('moves');
+    stream = stream.where('fecha', isGreaterThanOrEqualTo: fechaInicial);
+    stream = stream.where('fecha', isLessThan: fechaFinal);
+    // .snapshots();
     switch (movesViewProvider.index) {
-      case 0:
-        stream = FirebaseFirestore.instance
-            .doc('users/${currentUser.uid}')
-            .collection('moves')
-            .orderBy('fecha', descending: true)
-            .snapshots();
-        break;
       case 1:
-        stream = FirebaseFirestore.instance
-            .doc('users/${currentUser.uid}')
-            .collection('moves')
-            // .orderBy('fecha', descending: true)
-            .where('tipo', isEqualTo: 'GASTO')
-            .snapshots();
+        stream = stream.where('tipo', isEqualTo: 'GASTO');
         break;
       case 2:
-        stream = FirebaseFirestore.instance
-            .doc('users/${currentUser.uid}')
-            .collection('moves')
-            // .orderBy('fecha', descending: true)
-            .where('tipo', isEqualTo: 'INGRESO')
-            .snapshots();
+        stream = stream.where('tipo', isEqualTo: 'INGRESO');
         break;
       default:
-        stream = FirebaseFirestore.instance
-            .doc('users/${currentUser.uid}')
-            .collection('moves')
-            .orderBy('fecha', descending: true)
-            .snapshots();
     }
-    return StreamBuilder(
-      stream: stream,
-      builder: (BuildContext context,
-          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-        if (snapshot.hasData) {
-          final items = snapshot.data!.docs;
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            height: 360,
-            child: ListView.separated(
-                itemBuilder: (BuildContext context, int index) {
-                  // final fecha = DateTime.parse(items[index].get('fecha'));
-                  final Timestamp fechaTimestamp = items[index].get('fecha');
-                  final DateTime fechaDateTime = fechaTimestamp.toDate();
-                  final String fecha =
-                      "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
-                  return Dismissible(
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        await Alerts().confirmDialog(
-                            context: context,
-                            message: '¿Confirma eliminar el movimiento?',
-                            button1Function: () async {
-                              // Obtener datos de la cuenta
-                              final DocumentSnapshot<Map<String, dynamic>>
-                                  cuenta = await FirebaseFirestore.instance
+    return Column(
+      children: [
+        const _Tools(),
+        StreamBuilder(
+          stream: stream.snapshots(),
+          builder: (BuildContext context,
+              AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+            if (snapshot.hasData) {
+              final items = snapshot.data!.docs;
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                height: 360,
+                child: ListView.separated(
+                    itemBuilder: (BuildContext context, int index) {
+                      // final fecha = DateTime.parse(items[index].get('fecha'));
+                      final Timestamp fechaTimestamp =
+                          items[index].get('fecha');
+                      final DateTime fechaDateTime = fechaTimestamp.toDate();
+                      final String fecha =
+                          "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
+                      return Dismissible(
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.startToEnd) {
+                            await Alerts().confirmDialog(
+                                context: context,
+                                message: '¿Confirma eliminar el movimiento?',
+                                button1Function: () async {
+                                  // Obtener datos de la cuenta
+                                  final DocumentSnapshot<Map<String, dynamic>>
+                                      cuenta = await FirebaseFirestore.instance
+                                          .doc('users/${currentUser.uid}')
+                                          .collection('accounts')
+                                          .doc(
+                                              '${items[index].get('cuenta_id')}')
+                                          .get();
+                                  final saldoMovimiento = (items[index]
+                                              .get('tipo') ==
+                                          'INGRESO')
+                                      ? double.parse(
+                                              "${items[index].get('cantidad')}") *
+                                          -1
+                                      : double.parse(
+                                          "${items[index].get('cantidad')}");
+                                  final saldo =
+                                      double.parse("${cuenta.get('saldo')}") +
+                                          saldoMovimiento;
+                                  // Actualizar el saldo
+                                  await FirebaseFirestore.instance
                                       .doc('users/${currentUser.uid}')
                                       .collection('accounts')
                                       .doc('${items[index].get('cuenta_id')}')
-                                      .get();
-                              final saldoMovimiento = (items[index]
-                                          .get('tipo') ==
-                                      'INGRESO')
-                                  ? double.parse(
-                                          "${items[index].get('cantidad')}") *
-                                      -1
-                                  : double.parse(
-                                      "${items[index].get('cantidad')}");
-                              final saldo =
-                                  double.parse("${cuenta.get('saldo')}") +
-                                      saldoMovimiento;
-                              // Actualizar el saldo
-                              await FirebaseFirestore.instance
-                                  .doc('users/${currentUser.uid}')
-                                  .collection('accounts')
-                                  .doc('${items[index].get('cuenta_id')}')
-                                  .update({'saldo': saldo});
-                              // Eliminar movimiento
-                              await FirebaseFirestore.instance
-                                  .doc('users/${currentUser.uid}')
-                                  .collection('moves')
-                                  .doc(items[index].id)
-                                  .delete();
-                              Navigator.pop(context);
-                              return null;
-                            },
-                            button1Text: 'Si',
-                            button2Function: () async {
-                              Navigator.pop(context);
-                              return null;
-                            },
-                            button2Text: 'No');
-                      } else {
-                        AddMoveProvider addMoveProvider =
-                            Provider.of<AddMoveProvider>(context,
-                                listen: false);
-                        addMoveProvider.reset();
-                        addMoveProvider.id = items[index].id;
-                        addMoveProvider.isGasto =
-                            (items[index].get('tipo') == 'GASTO')
-                                ? true
-                                : false;
-                        addMoveProvider.cuenta =
-                            "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
-                        if (items[index].get('tipo') == 'INGRESO') {
-                          addMoveProvider.conceptoIngreso =
-                              items[index].get('categoria_id') +
-                                  '\$' +
-                                  items[index].get('categoria');
-                          addMoveProvider.conceptoGasto = '';
-                        } else {
-                          addMoveProvider.conceptoIngreso = '';
-                          addMoveProvider.conceptoGasto =
-                              items[index].get('categoria_id') +
-                                  '\$' +
-                                  items[index].get('categoria');
-                        }
-                        addMoveProvider.importe = items[index].get('cantidad');
-                        addMoveProvider.movimiento = items[index].get('nombre');
-                        addMoveProvider.fecha = items[index].get('fecha');
-                        addMoveProvider.descripcion =
-                            items[index].get('descripcion');
-                        addMoveProvider.saldoAnterior =
-                            double.parse(items[index].get('cantidad'));
-                        addMoveProvider.tipoMovimientoAnterior =
-                            items[index].get('tipo');
-                        locator<NavigationService>().navigateTo('/addmove');
-                      }
-                      return null;
-                    },
-                    // direction: DismissDirection.startToEnd,
-                    key: ValueKey(items[index].id),
-                    background: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      color: Colors.red,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.delete,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          Text(
-                            'Eliminar',
-                            style: GoogleFonts.montserratAlternates(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      ),
-                    ),
-                    secondaryBackground: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      color: Colors.blue,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Modificar',
-                            style: GoogleFonts.montserratAlternates(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(
-                            width: 20,
-                          ),
-                          const Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
-                    ),
-                    onDismissed: (direction) {
-                      // if (direction == DismissDirection.endToStart) {
-                      //   AddMoveProvider addMoveProvider =
-                      //       Provider.of<AddMoveProvider>(context,
-                      //           listen: false);
-                      //   addMoveProvider.reset();
-                      //   addMoveProvider.id = items[index].id;
-                      //   addMoveProvider.isGasto =
-                      //       (items[index].get('tipo') == 'GASTO')
-                      //           ? true
-                      //           : false;
-                      //   addMoveProvider.cuenta =
-                      //       "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
-                      //   if (items[index].get('tipo') == 'INGRESO') {
-                      //     addMoveProvider.conceptoIngreso =
-                      //         items[index].get('categoria_id') +
-                      //             '\$' +
-                      //             items[index].get('categoria');
-                      //     addMoveProvider.conceptoGasto = '';
-                      //   } else {
-                      //     addMoveProvider.conceptoIngreso = '';
-                      //     addMoveProvider.conceptoGasto =
-                      //         items[index].get('categoria_id') +
-                      //             '\$' +
-                      //             items[index].get('categoria');
-                      //   }
-                      //   addMoveProvider.importe = items[index].get('cantidad');
-                      //   addMoveProvider.movimiento = items[index].get('nombre');
-                      //   addMoveProvider.fecha = items[index].get('fecha');
-                      //   addMoveProvider.descripcion =
-                      //       items[index].get('descripcion');
-                      //   locator<NavigationService>().navigateTo('/addmove');
-                      // } else {}
-                    },
-                    child: ListTile(
-                      dense: true,
-                      isThreeLine: true,
-                      title: Wrap(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                      .update({'saldo': saldo});
+                                  // Eliminar movimiento
+                                  await FirebaseFirestore.instance
+                                      .doc('users/${currentUser.uid}')
+                                      .collection('moves')
+                                      .doc(items[index].id)
+                                      .delete();
+                                  Navigator.pop(context);
+                                  return null;
+                                },
+                                button1Text: 'Si',
+                                button2Function: () async {
+                                  Navigator.pop(context);
+                                  return null;
+                                },
+                                button2Text: 'No');
+                          } else {
+                            AddMoveProvider addMoveProvider =
+                                Provider.of<AddMoveProvider>(context,
+                                    listen: false);
+                            addMoveProvider.reset();
+                            addMoveProvider.id = items[index].id;
+                            addMoveProvider.isGasto =
+                                (items[index].get('tipo') == 'GASTO')
+                                    ? true
+                                    : false;
+                            addMoveProvider.cuenta =
+                                "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
+                            if (items[index].get('tipo') == 'INGRESO') {
+                              addMoveProvider.conceptoIngreso =
+                                  items[index].get('categoria_id') +
+                                      '\$' +
+                                      items[index].get('categoria');
+                              addMoveProvider.conceptoGasto = '';
+                            } else {
+                              addMoveProvider.conceptoIngreso = '';
+                              addMoveProvider.conceptoGasto =
+                                  items[index].get('categoria_id') +
+                                      '\$' +
+                                      items[index].get('categoria');
+                            }
+                            addMoveProvider.importe =
+                                items[index].get('cantidad');
+                            addMoveProvider.movimiento =
+                                items[index].get('nombre');
+                            addMoveProvider.fecha = items[index].get('fecha');
+                            addMoveProvider.descripcion =
+                                items[index].get('descripcion');
+                            addMoveProvider.saldoAnterior =
+                                double.parse(items[index].get('cantidad'));
+                            addMoveProvider.tipoMovimientoAnterior =
+                                items[index].get('tipo');
+                            locator<NavigationService>().navigateTo('/addmove');
+                          }
+                          return null;
+                        },
+                        // direction: DismissDirection.startToEnd,
+                        key: ValueKey(items[index].id),
+                        background: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          color: Colors.red,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Text(
-                                items[index].get('nombre'),
-                                style: GoogleFonts.montserratAlternates(
-                                    color: Colors.black54,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20),
+                              const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                width: 20,
                               ),
                               Text(
-                                "\$ ${items[index].get('cantidad')}",
+                                'Eliminar',
                                 style: GoogleFonts.montserratAlternates(
-                                    color: items[index].get('tipo') == 'GASTO'
-                                        ? Colors.redAccent
-                                        : Colors.greenAccent,
+                                    color: Colors.white,
                                     fontWeight: FontWeight.bold),
                               )
                             ],
                           ),
-                        ],
-                      ),
-                      subtitle: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        ),
+                        secondaryBackground: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          color: Colors.blue,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
-                                fecha,
+                                'Modificar',
                                 style: GoogleFonts.montserratAlternates(
-                                    color: Colors.black38,
-                                    fontSize: 14,
-                                    fontStyle: FontStyle.italic),
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              const Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                        onDismissed: (direction) {
+                          // if (direction == DismissDirection.endToStart) {
+                          //   AddMoveProvider addMoveProvider =
+                          //       Provider.of<AddMoveProvider>(context,
+                          //           listen: false);
+                          //   addMoveProvider.reset();
+                          //   addMoveProvider.id = items[index].id;
+                          //   addMoveProvider.isGasto =
+                          //       (items[index].get('tipo') == 'GASTO')
+                          //           ? true
+                          //           : false;
+                          //   addMoveProvider.cuenta =
+                          //       "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
+                          //   if (items[index].get('tipo') == 'INGRESO') {
+                          //     addMoveProvider.conceptoIngreso =
+                          //         items[index].get('categoria_id') +
+                          //             '\$' +
+                          //             items[index].get('categoria');
+                          //     addMoveProvider.conceptoGasto = '';
+                          //   } else {
+                          //     addMoveProvider.conceptoIngreso = '';
+                          //     addMoveProvider.conceptoGasto =
+                          //         items[index].get('categoria_id') +
+                          //             '\$' +
+                          //             items[index].get('categoria');
+                          //   }
+                          //   addMoveProvider.importe = items[index].get('cantidad');
+                          //   addMoveProvider.movimiento = items[index].get('nombre');
+                          //   addMoveProvider.fecha = items[index].get('fecha');
+                          //   addMoveProvider.descripcion =
+                          //       items[index].get('descripcion');
+                          //   locator<NavigationService>().navigateTo('/addmove');
+                          // } else {}
+                        },
+                        child: ListTile(
+                          dense: true,
+                          isThreeLine: true,
+                          title: Wrap(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Text(
+                                    items[index].get('nombre'),
+                                    style: GoogleFonts.montserratAlternates(
+                                        color: Colors.black54,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20),
+                                  ),
+                                  Text(
+                                    "\$ ${items[index].get('cantidad')}",
+                                    style: GoogleFonts.montserratAlternates(
+                                        color:
+                                            items[index].get('tipo') == 'GASTO'
+                                                ? Colors.redAccent
+                                                : Colors.greenAccent,
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                ],
+                              ),
+                            ],
+                          ),
+                          subtitle: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Text(
+                                    fecha,
+                                    style: GoogleFonts.montserratAlternates(
+                                        color: Colors.black38,
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic),
+                                  ),
+                                  Text(
+                                    "${items[index].get('categoria')}",
+                                    softWrap: true,
+                                    style: GoogleFonts.montserratAlternates(
+                                        color: Colors.black38,
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic),
+                                  ),
+                                ],
                               ),
                               Text(
-                                "${items[index].get('categoria')}",
-                                softWrap: true,
+                                items[index].get('cuenta'),
                                 style: GoogleFonts.montserratAlternates(
                                     color: Colors.black38,
+                                    fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                     fontStyle: FontStyle.italic),
                               ),
                             ],
                           ),
-                          Text(
-                            items[index].get('cuenta'),
-                            style: GoogleFonts.montserratAlternates(
-                                color: Colors.black38,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                separatorBuilder: (_, __) => Container(
-                      color: Colors.black12,
-                      height: 2,
-                    ),
-                itemCount: items.length),
-          );
-        } else {
-          return Container();
-        }
-      },
+                        ),
+                      );
+                    },
+                    separatorBuilder: (_, __) => Container(
+                          color: Colors.black12,
+                          height: 2,
+                        ),
+                    itemCount: items.length),
+              );
+            } else {
+              return Container();
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _Tools extends StatelessWidget {
+  const _Tools({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    MovesViewProvider movesViewProvider =
+        Provider.of<MovesViewProvider>(context);
+    final months = [
+      {'id': DateTime.january, 'month': 'Enero'},
+      {'id': DateTime.february, 'month': 'Febrero'},
+      {'id': DateTime.march, 'month': 'Marzo'},
+      {'id': DateTime.april, 'month': 'Abril'},
+      {'id': DateTime.may, 'month': 'Mayo'},
+      {'id': DateTime.june, 'month': 'Junio'},
+      {'id': DateTime.july, 'month': 'Julio'},
+      {'id': DateTime.august, 'month': 'Agosto'},
+      {'id': DateTime.september, 'month': 'Septiembre'},
+      {'id': DateTime.october, 'month': 'Octubre'},
+      {'id': DateTime.november, 'month': 'Noviembre'},
+      {'id': DateTime.december, 'month': 'Diciembre'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        children: [
+          Text(
+            'Mes',
+            style: GoogleFonts.montserratAlternates(
+                color: Colors.pinkAccent, fontWeight: FontWeight.bold),
+          ),
+          DropdownButton<int>(
+            value: movesViewProvider.currentDate.month,
+            items: months.map((Map<String, dynamic> items) {
+              return DropdownMenuItem<int>(
+                value: items['id'],
+                child: Text(
+                  items['month'],
+                  style: GoogleFonts.montserratAlternates(
+                    color: Colors.grey[600],
+                    //fontWeight: FontWeight.bold
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (int? value) {
+              movesViewProvider.currentDate =
+                  DateTime(movesViewProvider.currentDate.year, value!);
+            },
+          ),
+        ],
+      ),
     );
   }
 }

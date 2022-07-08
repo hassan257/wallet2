@@ -14,6 +14,7 @@ class SettingsView extends StatelessWidget {
     return SafeArea(
       child: SingleChildScrollView(
         child: Column(
+          // crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
               onTap: () async {
@@ -32,6 +33,9 @@ class SettingsView extends StatelessWidget {
                 leading: Icon(Icons.logout),
                 trailing: Icon(Icons.arrow_forward_ios),
               ),
+            ),
+            const ListTile(
+              title: Center(child: Text('Versión: 1.1.1')),
             )
           ],
         ),
