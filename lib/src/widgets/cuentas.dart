@@ -20,7 +20,7 @@ class Cuentas extends StatelessWidget {
     AccountProvider accountProvider = Provider.of<AccountProvider>(context);
     return SizedBox(
       // color: Colors.red,
-      height: 150,
+      height: 125,
       child: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -46,7 +46,7 @@ class Cuentas extends StatelessWidget {
             cuentas.sort((a, b) => a['nombre'].compareTo(b['nombre']));
             cuentas.add({'nombre': 'Agregar Cuenta', 'saldo': 0, 'tipo': 1});
             return CarouselSlider(
-              options: CarouselOptions(height: 100.0),
+              options: CarouselOptions(height: 85.0),
               items: cuentas.map((i) {
                 return Builder(
                   builder: (BuildContext context) {
@@ -84,9 +84,12 @@ class Cuentas extends StatelessWidget {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Text("${i['nombre']}",
-                                    style: GoogleFonts.montserratAlternates(
-                                        color: Colors.black54, fontSize: 20)),
+                                Text(
+                                  "${i['nombre']}",
+                                  style: GoogleFonts.montserratAlternates(
+                                      color: Colors.black54, fontSize: 20),
+                                  softWrap: true,
+                                ),
                                 if (i['tipo'] == 0)
                                   Row(
                                     mainAxisAlignment:

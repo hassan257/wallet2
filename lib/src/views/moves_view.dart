@@ -20,13 +20,14 @@ class MovesView extends StatelessWidget {
     return SafeArea(
       child: Stack(
         children: [
-          Wrap(
-            children: [
-              Column(
-                children: const [Cuentas(), _MovesBar(), _LayoutView()],
-              ),
-            ],
-          ),
+          // Wrap(
+          //   children: [
+          //     Column(
+          //       children: const [Cuentas(), _MovesBar(), _LayoutView()],
+          //     ),
+          //   ],
+          // ),
+          const _LayoutView(),
           Positioned(
             bottom: 0,
             right: 10,
@@ -46,6 +47,65 @@ class MovesView extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _MainScroll extends StatelessWidget {
+  final List<Widget> elements;
+  const _MainScroll({Key? key, required this.elements}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverPersistentHeader(
+          floating: true,
+          delegate: _SliverCustomHeaderDelegate(
+              minHeight: 250,
+              maxHeight: 300,
+              child: Wrap(
+                children: [
+                  Column(
+                    children: const [
+                      Cuentas(),
+                      _MovesBar(),
+                      _Tools(),
+                    ],
+                  ),
+                ],
+              )),
+        ),
+        SliverList(delegate: SliverChildListDelegate(elements))
+      ],
+    );
+  }
+}
+
+class _SliverCustomHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+  _SliverCustomHeaderDelegate(
+      {required this.minHeight, required this.maxHeight, required this.child});
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(
+      child: child,
+    );
+  }
+
+  @override
+  double get maxExtent => maxHeight > minHeight ? maxHeight : minHeight;
+
+  @override
+  double get minExtent => minHeight < maxHeight ? minHeight : maxHeight;
+
+  @override
+  bool shouldRebuild(_SliverCustomHeaderDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
   }
 }
 
@@ -70,7 +130,7 @@ class _LayoutView extends StatelessWidget {
         .collection('moves');
     stream = stream.where('fecha', isGreaterThanOrEqualTo: fechaInicial);
     stream = stream.where('fecha', isLessThan: fechaFinal);
-    // .snapshots();
+    stream = stream.orderBy('fecha', descending: true);
     switch (movesViewProvider.index) {
       case 1:
         stream = stream.where('tipo', isEqualTo: 'GASTO');
@@ -80,270 +140,288 @@ class _LayoutView extends StatelessWidget {
         break;
       default:
     }
-    return Column(
-      children: [
-        const _Tools(),
-        StreamBuilder(
-          stream: stream.snapshots(),
-          builder: (BuildContext context,
-              AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-            if (snapshot.hasData) {
-              final items = snapshot.data!.docs;
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                height: 360,
-                child: ListView.separated(
-                    itemBuilder: (BuildContext context, int index) {
-                      // final fecha = DateTime.parse(items[index].get('fecha'));
-                      final Timestamp fechaTimestamp =
-                          items[index].get('fecha');
-                      final DateTime fechaDateTime = fechaTimestamp.toDate();
-                      final String fecha =
-                          "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
-                      return Dismissible(
-                        confirmDismiss: (direction) async {
-                          if (direction == DismissDirection.startToEnd) {
-                            await Alerts().confirmDialog(
-                                context: context,
-                                message: '¿Confirma eliminar el movimiento?',
-                                button1Function: () async {
-                                  // Obtener datos de la cuenta
-                                  final DocumentSnapshot<Map<String, dynamic>>
-                                      cuenta = await FirebaseFirestore.instance
-                                          .doc('users/${currentUser.uid}')
-                                          .collection('accounts')
-                                          .doc(
-                                              '${items[index].get('cuenta_id')}')
-                                          .get();
-                                  final saldoMovimiento = (items[index]
-                                              .get('tipo') ==
-                                          'INGRESO')
-                                      ? double.parse(
-                                              "${items[index].get('cantidad')}") *
-                                          -1
-                                      : double.parse(
-                                          "${items[index].get('cantidad')}");
-                                  final saldo =
-                                      double.parse("${cuenta.get('saldo')}") +
-                                          saldoMovimiento;
-                                  // Actualizar el saldo
-                                  await FirebaseFirestore.instance
-                                      .doc('users/${currentUser.uid}')
-                                      .collection('accounts')
-                                      .doc('${items[index].get('cuenta_id')}')
-                                      .update({'saldo': saldo});
-                                  // Eliminar movimiento
-                                  await FirebaseFirestore.instance
-                                      .doc('users/${currentUser.uid}')
-                                      .collection('moves')
-                                      .doc(items[index].id)
-                                      .delete();
-                                  Navigator.pop(context);
-                                  return null;
-                                },
-                                button1Text: 'Si',
-                                button2Function: () async {
-                                  Navigator.pop(context);
-                                  return null;
-                                },
-                                button2Text: 'No');
-                          } else {
-                            AddMoveProvider addMoveProvider =
-                                Provider.of<AddMoveProvider>(context,
-                                    listen: false);
-                            addMoveProvider.reset();
-                            addMoveProvider.id = items[index].id;
-                            addMoveProvider.isGasto =
-                                (items[index].get('tipo') == 'GASTO')
-                                    ? true
-                                    : false;
-                            addMoveProvider.cuenta =
-                                "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
-                            if (items[index].get('tipo') == 'INGRESO') {
-                              addMoveProvider.conceptoIngreso =
-                                  items[index].get('categoria_id') +
-                                      '\$' +
-                                      items[index].get('categoria');
-                              addMoveProvider.conceptoGasto = '';
-                            } else {
-                              addMoveProvider.conceptoIngreso = '';
-                              addMoveProvider.conceptoGasto =
-                                  items[index].get('categoria_id') +
-                                      '\$' +
-                                      items[index].get('categoria');
-                            }
-                            addMoveProvider.importe =
-                                items[index].get('cantidad');
-                            addMoveProvider.movimiento =
-                                items[index].get('nombre');
-                            addMoveProvider.fecha = items[index].get('fecha');
-                            addMoveProvider.descripcion =
-                                items[index].get('descripcion');
-                            addMoveProvider.saldoAnterior =
-                                double.parse(items[index].get('cantidad'));
-                            addMoveProvider.tipoMovimientoAnterior =
-                                items[index].get('tipo');
-                            locator<NavigationService>().navigateTo('/addmove');
-                          }
-                          return null;
-                        },
-                        // direction: DismissDirection.startToEnd,
-                        key: ValueKey(items[index].id),
-                        background: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          color: Colors.red,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(
-                                width: 20,
-                              ),
-                              Text(
-                                'Eliminar',
-                                style: GoogleFonts.montserratAlternates(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              )
-                            ],
-                          ),
-                        ),
-                        secondaryBackground: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          color: Colors.blue,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                'Modificar',
-                                style: GoogleFonts.montserratAlternates(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(
-                                width: 20,
-                              ),
-                              const Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
-                        ),
-                        onDismissed: (direction) {
-                          // if (direction == DismissDirection.endToStart) {
-                          //   AddMoveProvider addMoveProvider =
-                          //       Provider.of<AddMoveProvider>(context,
-                          //           listen: false);
-                          //   addMoveProvider.reset();
-                          //   addMoveProvider.id = items[index].id;
-                          //   addMoveProvider.isGasto =
-                          //       (items[index].get('tipo') == 'GASTO')
-                          //           ? true
-                          //           : false;
-                          //   addMoveProvider.cuenta =
-                          //       "${items[index].get('cuenta_id')}\$${items[index].get('cuenta')}";
-                          //   if (items[index].get('tipo') == 'INGRESO') {
-                          //     addMoveProvider.conceptoIngreso =
-                          //         items[index].get('categoria_id') +
-                          //             '\$' +
-                          //             items[index].get('categoria');
-                          //     addMoveProvider.conceptoGasto = '';
-                          //   } else {
-                          //     addMoveProvider.conceptoIngreso = '';
-                          //     addMoveProvider.conceptoGasto =
-                          //         items[index].get('categoria_id') +
-                          //             '\$' +
-                          //             items[index].get('categoria');
-                          //   }
-                          //   addMoveProvider.importe = items[index].get('cantidad');
-                          //   addMoveProvider.movimiento = items[index].get('nombre');
-                          //   addMoveProvider.fecha = items[index].get('fecha');
-                          //   addMoveProvider.descripcion =
-                          //       items[index].get('descripcion');
-                          //   locator<NavigationService>().navigateTo('/addmove');
-                          // } else {}
-                        },
-                        child: ListTile(
-                          dense: true,
-                          isThreeLine: true,
-                          title: Wrap(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  Text(
-                                    items[index].get('nombre'),
-                                    style: GoogleFonts.montserratAlternates(
-                                        color: Colors.black54,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20),
-                                  ),
-                                  Text(
-                                    "\$ ${items[index].get('cantidad')}",
-                                    style: GoogleFonts.montserratAlternates(
-                                        color:
-                                            items[index].get('tipo') == 'GASTO'
-                                                ? Colors.redAccent
-                                                : Colors.greenAccent,
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                ],
-                              ),
-                            ],
-                          ),
-                          subtitle: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  Text(
-                                    fecha,
-                                    style: GoogleFonts.montserratAlternates(
-                                        color: Colors.black38,
-                                        fontSize: 14,
-                                        fontStyle: FontStyle.italic),
-                                  ),
-                                  Text(
-                                    "${items[index].get('categoria')}",
-                                    softWrap: true,
-                                    style: GoogleFonts.montserratAlternates(
-                                        color: Colors.black38,
-                                        fontSize: 14,
-                                        fontStyle: FontStyle.italic),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                items[index].get('cuenta'),
-                                style: GoogleFonts.montserratAlternates(
-                                    color: Colors.black38,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    fontStyle: FontStyle.italic),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    separatorBuilder: (_, __) => Container(
-                          color: Colors.black12,
-                          height: 2,
-                        ),
-                    itemCount: items.length),
-              );
-            } else {
-              return Container();
-            }
-          },
-        ),
-      ],
+    return _ConstructorListaMovimientos(
+        stream: stream, currentUser: currentUser);
+  }
+}
+
+class _ConstructorListaMovimientos extends StatelessWidget {
+  const _ConstructorListaMovimientos({
+    Key? key,
+    required this.stream,
+    required this.currentUser,
+  }) : super(key: key);
+
+  final Query<Map<String, dynamic>> stream;
+  final User? currentUser;
+
+  @override
+  Widget build(BuildContext context) {
+    int index = 0;
+    return StreamBuilder(
+      stream: stream.snapshots(),
+      builder: (BuildContext context,
+          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+        if (snapshot.hasData) {
+          final items = snapshot.data!.docs;
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            // height: 360,
+            child: _MainScroll(
+                elements: items.map((item) {
+              final Timestamp fechaTimestamp = item.get('fecha');
+              final DateTime fechaDateTime = fechaTimestamp.toDate();
+              final String fecha =
+                  "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
+              index++;
+              if (index == 10) {
+                index = 0;
+                return Column(
+                  children: [
+                    _TarjetaMovimiento(
+                        currentUser: currentUser, fecha: fecha, item: item),
+                    const NativeInlineWidget()
+                  ],
+                );
+              }
+              return _TarjetaMovimiento(
+                  currentUser: currentUser, fecha: fecha, item: item);
+            }).toList()),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
+  }
+}
+
+class _TarjetaMovimiento extends StatelessWidget {
+  const _TarjetaMovimiento({
+    Key? key,
+    required this.currentUser,
+    required this.fecha,
+    required this.item,
+  }) : super(key: key);
+
+  final User? currentUser;
+  final String fecha;
+  final QueryDocumentSnapshot<Map<String, dynamic>> item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          await Alerts().confirmDialog(
+              context: context,
+              message: '¿Confirma eliminar el movimiento?',
+              button1Function: () async {
+                // Obtener datos de la cuenta
+                final DocumentSnapshot<Map<String, dynamic>> cuenta =
+                    await FirebaseFirestore.instance
+                        .doc('users/${currentUser!.uid}')
+                        .collection('accounts')
+                        .doc('${item.get('cuenta_id')}')
+                        .get();
+                final saldoMovimiento = (item.get('tipo') == 'INGRESO')
+                    ? double.parse("${item.get('cantidad')}") * -1
+                    : double.parse("${item.get('cantidad')}");
+                final saldo =
+                    double.parse("${cuenta.get('saldo')}") + saldoMovimiento;
+                // Actualizar el saldo
+                await FirebaseFirestore.instance
+                    .doc('users/${currentUser!.uid}')
+                    .collection('accounts')
+                    .doc('${item.get('cuenta_id')}')
+                    .update({'saldo': saldo});
+                // Eliminar movimiento
+                await FirebaseFirestore.instance
+                    .doc('users/${currentUser!.uid}')
+                    .collection('moves')
+                    .doc(item.id)
+                    .delete();
+                Navigator.pop(context);
+                return null;
+              },
+              button1Text: 'Si',
+              button2Function: () async {
+                Navigator.pop(context);
+                return null;
+              },
+              button2Text: 'No');
+        } else {
+          AddMoveProvider addMoveProvider =
+              Provider.of<AddMoveProvider>(context, listen: false);
+          addMoveProvider.reset();
+          addMoveProvider.id = item.id;
+          addMoveProvider.isGasto =
+              (item.get('tipo') == 'GASTO') ? true : false;
+          addMoveProvider.cuenta =
+              "${item.get('cuenta_id')}\$${item.get('cuenta')}";
+          if (item.get('tipo') == 'INGRESO') {
+            addMoveProvider.conceptoIngreso =
+                item.get('categoria_id') + '\$' + item.get('categoria');
+            addMoveProvider.conceptoGasto = '';
+          } else {
+            addMoveProvider.conceptoIngreso = '';
+            addMoveProvider.conceptoGasto =
+                item.get('categoria_id') + '\$' + item.get('categoria');
+          }
+          addMoveProvider.importe = item.get('cantidad');
+          addMoveProvider.movimiento = item.get('nombre');
+          addMoveProvider.fecha = item.get('fecha');
+          addMoveProvider.descripcion = item.get('descripcion');
+          addMoveProvider.saldoAnterior = double.parse(item.get('cantidad'));
+          addMoveProvider.tipoMovimientoAnterior = item.get('tipo');
+          locator<NavigationService>().navigateTo('/addmove');
+        }
+        return null;
+      },
+      key: ValueKey(item.id),
+      background: const _BackgroundDismissable(),
+      secondaryBackground: const _SecondaryBackgroundDismissable(),
+      child: _ContenidoTarjetaMovimiento(item: item, fecha: fecha),
+    );
+  }
+}
+
+class _ContenidoTarjetaMovimiento extends StatelessWidget {
+  const _ContenidoTarjetaMovimiento({
+    Key? key,
+    required this.item,
+    required this.fecha,
+  }) : super(key: key);
+
+  final QueryDocumentSnapshot<Map<String, dynamic>> item;
+  final String fecha;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      dense: true,
+      isThreeLine: true,
+      title: Wrap(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  item.get('nombre'),
+                  style: GoogleFonts.montserratAlternates(
+                      color: Colors.black54,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+                Text(
+                  "\$ ${item.get('cantidad')}",
+                  style: GoogleFonts.montserratAlternates(
+                      color: item.get('tipo') == 'GASTO'
+                          ? Colors.redAccent
+                          : Colors.greenAccent,
+                      fontWeight: FontWeight.bold),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+      subtitle: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Text(
+                fecha,
+                style: GoogleFonts.montserratAlternates(
+                    color: Colors.black38,
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic),
+              ),
+              Text(
+                "${item.get('categoria')}",
+                softWrap: true,
+                style: GoogleFonts.montserratAlternates(
+                    color: Colors.black38,
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+          Text(
+            item.get('cuenta'),
+            style: GoogleFonts.montserratAlternates(
+                color: Colors.black38,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontStyle: FontStyle.italic),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SecondaryBackgroundDismissable extends StatelessWidget {
+  const _SecondaryBackgroundDismissable({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      color: Colors.blue,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            'Modificar',
+            style: GoogleFonts.montserratAlternates(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(
+            width: 20,
+          ),
+          const Icon(
+            Icons.edit,
+            color: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BackgroundDismissable extends StatelessWidget {
+  const _BackgroundDismissable({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      color: Colors.red,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.delete,
+            color: Colors.white,
+          ),
+          const SizedBox(
+            width: 20,
+          ),
+          Text(
+            'Eliminar',
+            style: GoogleFonts.montserratAlternates(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          )
+        ],
+      ),
     );
   }
 }

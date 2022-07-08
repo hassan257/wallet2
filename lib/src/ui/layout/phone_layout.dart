@@ -25,14 +25,18 @@ class PhoneLayout extends StatelessWidget {
       body: child,
       bottomNavigationBar: (bottomNavigationProvider.isLog)
           ? SizedBox(
-              height: 150,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
+              height: 125,
+              child: Wrap(
                 children: [
-                  const BannerInlineWidget(),
-                  _CustomNavigationBar(
-                      bottomNavigationProvider: bottomNavigationProvider,
-                      routes: routes),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const BannerInlineWidget(),
+                      _CustomNavigationBar(
+                          bottomNavigationProvider: bottomNavigationProvider,
+                          routes: routes),
+                    ],
+                  ),
                 ],
               ),
             )
