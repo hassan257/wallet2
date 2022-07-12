@@ -52,7 +52,9 @@ class MovesView extends StatelessWidget {
 
 class _MainScroll extends StatelessWidget {
   final List<Widget> elements;
-  const _MainScroll({Key? key, required this.elements}) : super(key: key);
+  final double saldo;
+  const _MainScroll({Key? key, required this.elements, required this.saldo})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -62,17 +64,22 @@ class _MainScroll extends StatelessWidget {
           floating: true,
           delegate: _SliverCustomHeaderDelegate(
               minHeight: 250,
-              maxHeight: 300,
-              child: Wrap(
-                children: [
-                  Column(
-                    children: const [
-                      Cuentas(),
-                      _MovesBar(),
-                      _Tools(),
-                    ],
-                  ),
-                ],
+              maxHeight: 320,
+              child: Container(
+                color: Colors.grey[200],
+                child: Wrap(
+                  children: [
+                    Column(
+                      children: [
+                        const Cuentas(),
+                        const _MovesBar(),
+                        _Tools(
+                          saldo: saldo,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               )),
         ),
         SliverList(delegate: SliverChildListDelegate(elements))
@@ -131,12 +138,24 @@ class _LayoutView extends StatelessWidget {
     stream = stream.where('fecha', isGreaterThanOrEqualTo: fechaInicial);
     stream = stream.where('fecha', isLessThan: fechaFinal);
     stream = stream.orderBy('fecha', descending: true);
+    if (movesViewProvider.selectedAccount != 'TODAS') {
+      stream = stream.where('cuenta_id',
+          isEqualTo: movesViewProvider.selectedAccount);
+    }
     switch (movesViewProvider.index) {
       case 1:
         stream = stream.where('tipo', isEqualTo: 'GASTO');
+        if (movesViewProvider.selectedCategoryGastos != 'TODAS') {
+          stream = stream.where('categoria_id',
+              isEqualTo: movesViewProvider.selectedCategoryGastos);
+        }
         break;
       case 2:
         stream = stream.where('tipo', isEqualTo: 'INGRESO');
+        if (movesViewProvider.selectedCategoryIngresos != 'TODAS') {
+          stream = stream.where('categoria_id',
+              isEqualTo: movesViewProvider.selectedCategoryIngresos);
+        }
         break;
       default:
     }
@@ -145,7 +164,7 @@ class _LayoutView extends StatelessWidget {
   }
 }
 
-class _ConstructorListaMovimientos extends StatelessWidget {
+class _ConstructorListaMovimientos extends StatefulWidget {
   const _ConstructorListaMovimientos({
     Key? key,
     required this.stream,
@@ -156,37 +175,55 @@ class _ConstructorListaMovimientos extends StatelessWidget {
   final User? currentUser;
 
   @override
+  State<_ConstructorListaMovimientos> createState() =>
+      _ConstructorListaMovimientosState();
+}
+
+class _ConstructorListaMovimientosState
+    extends State<_ConstructorListaMovimientos> {
+  @override
   Widget build(BuildContext context) {
-    int index = 0;
+    // MovesViewProvider movesViewProvider =
+    //     Provider.of<MovesViewProvider>(context);
     return StreamBuilder(
-      stream: stream.snapshots(),
+      stream: widget.stream.snapshots(),
       builder: (BuildContext context,
           AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+        int index = 0;
+        // movesViewProvider.saldo = 0;
+        double saldo = 0;
         if (snapshot.hasData) {
           final items = snapshot.data!.docs;
+          final listaItems = items.map((item) {
+            final Timestamp fechaTimestamp = item.get('fecha');
+            final DateTime fechaDateTime = fechaTimestamp.toDate();
+            final String fecha =
+                "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
+            index++;
+            if (item.get('tipo') == 'GASTO') {
+              saldo -= double.parse(item.get('cantidad'));
+            } else {
+              saldo += double.parse(item.get('cantidad'));
+            }
+            if (index == 10) {
+              index = 0;
+              return Column(
+                children: [
+                  _TarjetaMovimiento(
+                      currentUser: widget.currentUser,
+                      fecha: fecha,
+                      item: item),
+                  const NativeInlineWidget()
+                ],
+              );
+            }
+            return _TarjetaMovimiento(
+                currentUser: widget.currentUser, fecha: fecha, item: item);
+          }).toList();
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             // height: 360,
-            child: _MainScroll(
-                elements: items.map((item) {
-              final Timestamp fechaTimestamp = item.get('fecha');
-              final DateTime fechaDateTime = fechaTimestamp.toDate();
-              final String fecha =
-                  "${fechaDateTime.day}/${fechaDateTime.month}/${fechaDateTime.year}";
-              index++;
-              if (index == 10) {
-                index = 0;
-                return Column(
-                  children: [
-                    _TarjetaMovimiento(
-                        currentUser: currentUser, fecha: fecha, item: item),
-                    const NativeInlineWidget()
-                  ],
-                );
-              }
-              return _TarjetaMovimiento(
-                  currentUser: currentUser, fecha: fecha, item: item);
-            }).toList()),
+            child: _MainScroll(saldo: saldo, elements: listaItems),
           );
         } else {
           return Container();
@@ -427,8 +464,10 @@ class _BackgroundDismissable extends StatelessWidget {
 }
 
 class _Tools extends StatelessWidget {
+  final double saldo;
   const _Tools({
     Key? key,
+    required this.saldo,
   }) : super(key: key);
 
   @override
@@ -449,38 +488,320 @@ class _Tools extends StatelessWidget {
       {'id': DateTime.november, 'month': 'Noviembre'},
       {'id': DateTime.december, 'month': 'Diciembre'},
     ];
-
+    final currentUser = FirebaseAuth.instance.currentUser;
     return Container(
       padding: const EdgeInsets.only(top: 10),
       child: Column(
         children: [
-          Text(
-            'Mes',
-            style: GoogleFonts.montserratAlternates(
-                color: Colors.pinkAccent, fontWeight: FontWeight.bold),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    'Cuenta',
+                    style: GoogleFonts.montserratAlternates(
+                        color: Colors.pinkAccent, fontWeight: FontWeight.bold),
+                  ),
+                  _ComboCuentas(
+                      currentUser: currentUser,
+                      movesViewProvider: movesViewProvider),
+                ],
+              ),
+              Column(
+                children: [
+                  Text(
+                    'Mes',
+                    style: GoogleFonts.montserratAlternates(
+                        color: Colors.pinkAccent, fontWeight: FontWeight.bold),
+                  ),
+                  DropdownButton<int>(
+                    value: movesViewProvider.currentDate.month,
+                    items: months.map((Map<String, dynamic> items) {
+                      return DropdownMenuItem<int>(
+                        value: items['id'],
+                        child: Text(
+                          items['month'],
+                          style: GoogleFonts.montserratAlternates(
+                            color: Colors.grey[600],
+                            //fontWeight: FontWeight.bold
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (int? value) {
+                      movesViewProvider.currentDate =
+                          DateTime(movesViewProvider.currentDate.year, value!);
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
-          DropdownButton<int>(
-            value: movesViewProvider.currentDate.month,
-            items: months.map((Map<String, dynamic> items) {
-              return DropdownMenuItem<int>(
-                value: items['id'],
+          Row(
+            mainAxisAlignment: movesViewProvider.index != 0
+                ? MainAxisAlignment.spaceAround
+                : MainAxisAlignment.center,
+            children: [
+              if (movesViewProvider.index != 0)
+                Column(
+                  children: [
+                    Text(
+                      'Categoria',
+                      style: GoogleFonts.montserratAlternates(
+                          color: Colors.pinkAccent,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    if (movesViewProvider.index == 1)
+                      _ComboCategoriaGastos(
+                          movesViewProvider: movesViewProvider)
+                    else
+                      _ComboCategoriaIngresos(
+                          movesViewProvider: movesViewProvider)
+                  ],
+                ),
+              Column(
+                children: [
+                  Text(
+                    'Saldo',
+                    style: GoogleFonts.montserratAlternates(
+                        color: Colors.pinkAccent, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    saldo.toStringAsFixed(2),
+                    style: GoogleFonts.montserratAlternates(
+                        color:
+                            saldo < 0 ? Colors.redAccent : Colors.greenAccent,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              )
+            ],
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class _ComboCategoriaIngresos extends StatelessWidget {
+  const _ComboCategoriaIngresos({
+    Key? key,
+    required this.movesViewProvider,
+  }) : super(key: key);
+
+  final MovesViewProvider movesViewProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('catalogs')
+            .doc('tipoConcepto')
+            .collection('movimientosIngreso')
+            .orderBy('nombre')
+            .snapshots(),
+        builder:
+            (_, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+          if (snapshot.hasData) {
+            List<DropdownMenuItem<String>>? items = [];
+            items.add(DropdownMenuItem<String>(
+              value: 'TODAS',
+              child: Text(
+                'Todas las Categorias',
+                style: GoogleFonts.montserratAlternates(
+                  color: Colors.grey[600],
+                  //fontWeight: FontWeight.bold
+                ),
+              ),
+            ));
+            items.addAll(snapshot.data!.docs
+                .map((QueryDocumentSnapshot<Map<String, dynamic>> items) {
+              return DropdownMenuItem<String>(
+                value: items.id,
                 child: Text(
-                  items['month'],
+                  items['nombre'],
                   style: GoogleFonts.montserratAlternates(
                     color: Colors.grey[600],
                     //fontWeight: FontWeight.bold
                   ),
                 ),
               );
-            }).toList(),
-            onChanged: (int? value) {
-              movesViewProvider.currentDate =
-                  DateTime(movesViewProvider.currentDate.year, value!);
-            },
-          ),
-        ],
-      ),
-    );
+            }).toList());
+            return DropdownButton<String>(
+              value: movesViewProvider.selectedCategoryIngresos,
+              items: items,
+              onChanged: (String? value) {
+                movesViewProvider.selectedCategoryIngresos = value!;
+              },
+            );
+          } else {
+            List<DropdownMenuItem<String>>? items = [];
+            items.add(DropdownMenuItem<String>(
+              value: 'TODAS',
+              child: Text(
+                'Todas las Cuentas',
+                style: GoogleFonts.montserratAlternates(
+                  color: Colors.grey[600],
+                  //fontWeight: FontWeight.bold
+                ),
+              ),
+            ));
+            return DropdownButton<String>(
+              value: 'TODAS',
+              items: items,
+              onChanged: (String? value) {},
+            );
+          }
+        });
+  }
+}
+
+class _ComboCategoriaGastos extends StatelessWidget {
+  const _ComboCategoriaGastos({
+    Key? key,
+    required this.movesViewProvider,
+  }) : super(key: key);
+
+  final MovesViewProvider movesViewProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('catalogs')
+            .doc('tipoConcepto')
+            .collection('movimientosGasto')
+            .orderBy('nombre')
+            .snapshots(),
+        builder:
+            (_, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+          if (snapshot.hasData) {
+            List<DropdownMenuItem<String>>? items = [];
+            items.add(DropdownMenuItem<String>(
+              value: 'TODAS',
+              child: Text(
+                'Todas las Categorias',
+                style: GoogleFonts.montserratAlternates(
+                  color: Colors.grey[600],
+                  //fontWeight: FontWeight.bold
+                ),
+              ),
+            ));
+            items.addAll(snapshot.data!.docs
+                .map((QueryDocumentSnapshot<Map<String, dynamic>> items) {
+              return DropdownMenuItem<String>(
+                value: items.id,
+                child: Text(
+                  items['nombre'],
+                  style: GoogleFonts.montserratAlternates(
+                    color: Colors.grey[600],
+                    //fontWeight: FontWeight.bold
+                  ),
+                ),
+              );
+            }).toList());
+            return DropdownButton<String>(
+              value: movesViewProvider.selectedCategoryGastos,
+              items: items,
+              onChanged: (String? value) {
+                movesViewProvider.selectedCategoryGastos = value!;
+              },
+            );
+          } else {
+            List<DropdownMenuItem<String>>? items = [];
+            items.add(DropdownMenuItem<String>(
+              value: 'TODAS',
+              child: Text(
+                'Todas las Cuentas',
+                style: GoogleFonts.montserratAlternates(
+                  color: Colors.grey[600],
+                  //fontWeight: FontWeight.bold
+                ),
+              ),
+            ));
+            return DropdownButton<String>(
+              value: 'TODAS',
+              items: items,
+              onChanged: (String? value) {},
+            );
+          }
+        });
+  }
+}
+
+class _ComboCuentas extends StatelessWidget {
+  const _ComboCuentas({
+    Key? key,
+    required this.currentUser,
+    required this.movesViewProvider,
+  }) : super(key: key);
+
+  final User? currentUser;
+  final MovesViewProvider movesViewProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .collection('accounts')
+            .orderBy('nombre')
+            .snapshots(),
+        builder:
+            (_, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+          if (snapshot.hasData) {
+            List<DropdownMenuItem<String>>? items = [];
+            items.add(DropdownMenuItem<String>(
+              value: 'TODAS',
+              child: Text(
+                'Todas las Cuentas',
+                style: GoogleFonts.montserratAlternates(
+                  color: Colors.grey[600],
+                  //fontWeight: FontWeight.bold
+                ),
+              ),
+            ));
+            items.addAll(snapshot.data!.docs
+                .map((QueryDocumentSnapshot<Map<String, dynamic>> items) {
+              return DropdownMenuItem<String>(
+                value: items.id,
+                child: Text(
+                  items['nombre'],
+                  style: GoogleFonts.montserratAlternates(
+                    color: Colors.grey[600],
+                    //fontWeight: FontWeight.bold
+                  ),
+                ),
+              );
+            }).toList());
+            return DropdownButton<String>(
+              value: movesViewProvider.selectedAccount,
+              items: items,
+              onChanged: (String? value) {
+                movesViewProvider.selectedAccount = value!;
+              },
+            );
+          } else {
+            List<DropdownMenuItem<String>>? items = [];
+            items.add(DropdownMenuItem<String>(
+              value: 'TODAS',
+              child: Text(
+                'Todas las Cuentas',
+                style: GoogleFonts.montserratAlternates(
+                  color: Colors.grey[600],
+                  //fontWeight: FontWeight.bold
+                ),
+              ),
+            ));
+            return DropdownButton<String>(
+              value: 'TODAS',
+              items: items,
+              onChanged: (String? value) {},
+            );
+          }
+        });
   }
 }
 
@@ -498,6 +819,8 @@ class _MovesBar extends StatelessWidget {
         currentIndex: movesViewProvider.index,
         onTap: (int index) {
           movesViewProvider.index = index;
+          movesViewProvider.selectedCategoryGastos = 'TODAS';
+          movesViewProvider.selectedCategoryIngresos = 'TODAS';
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.all_inbox), label: 'Todos'),

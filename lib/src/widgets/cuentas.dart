@@ -34,17 +34,19 @@ class Cuentas extends StatelessWidget {
                 cuentasFirebase = snapshot.data!.docs;
             List<Map<String, dynamic>> cuentas = [];
             for (var cuenta in cuentasFirebase) {
+              final cuentaString = cuenta.get('saldo').toString();
+              final double saldo = double.parse(cuentaString);
               {
                 cuentas.add({
                   'id': cuenta.id,
                   'nombre': cuenta.get('nombre'),
-                  'saldo': cuenta.get('saldo'),
+                  'saldo': saldo.toStringAsFixed(2),
                   'tipo': 0
                 });
               }
             }
             cuentas.sort((a, b) => a['nombre'].compareTo(b['nombre']));
-            cuentas.add({'nombre': 'Agregar Cuenta', 'saldo': 0, 'tipo': 1});
+            cuentas.add({'nombre': 'Agregar Cuenta', 'saldo': 0.00, 'tipo': 1});
             return CarouselSlider(
               options: CarouselOptions(height: 85.0),
               items: cuentas.map((i) {
