@@ -335,6 +335,7 @@ class _ContenidoTarjetaMovimiento extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return ListTile(
       dense: true,
       isThreeLine: true,
@@ -345,12 +346,16 @@ class _ContenidoTarjetaMovimiento extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  item.get('nombre'),
-                  style: GoogleFonts.montserratAlternates(
-                      color: Colors.black54,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
+                SizedBox(
+                  width: size.width * 0.65,
+                  child: Text(
+                    item.get('nombre'),
+                    softWrap: true,
+                    style: GoogleFonts.montserratAlternates(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
+                  ),
                 ),
                 Text(
                   "\$ ${item.get('cantidad')}",

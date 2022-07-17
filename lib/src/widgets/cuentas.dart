@@ -70,52 +70,9 @@ class Cuentas extends StatelessWidget {
                               locator<NavigationService>()
                                   .navigateTo('/account');
                             },
-                      child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: const EdgeInsets.symmetric(horizontal: 15.0),
-                          decoration: const BoxDecoration(
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.black38,
-                                    blurStyle: BlurStyle.solid,
-                                    blurRadius: 10)
-                              ]),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Text(
-                                  "${i['nombre']}",
-                                  style: GoogleFonts.montserratAlternates(
-                                      color: Colors.black54, fontSize: 20),
-                                  softWrap: true,
-                                ),
-                                if (i['tipo'] == 0)
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Text("Saldo neto",
-                                          style:
-                                              GoogleFonts.montserratAlternates(
-                                                  color: Colors.black54,
-                                                  fontSize: 16)),
-                                      Text("\$ ${i['saldo']}",
-                                          style:
-                                              GoogleFonts.montserratAlternates(
-                                                  color: double.parse(
-                                                              "${i['saldo']}") <
-                                                          0
-                                                      ? Colors.redAccent
-                                                      : Colors.greenAccent,
-                                                  fontSize: 16)),
-                                    ],
-                                  )
-                              ],
-                            ),
-                          )),
+                      child: TarjetaCuenta(
+                        element: i,
+                      ),
                     );
                   },
                 );
@@ -184,5 +141,53 @@ class Cuentas extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class TarjetaCuenta extends StatelessWidget {
+  final Map<String, dynamic> element;
+  const TarjetaCuenta({
+    Key? key,
+    required this.element,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        width: MediaQuery.of(context).size.width,
+        margin: const EdgeInsets.symmetric(horizontal: 15.0),
+        decoration: const BoxDecoration(color: Colors.white, boxShadow: [
+          BoxShadow(
+              color: Colors.black38, blurStyle: BlurStyle.solid, blurRadius: 10)
+        ]),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(
+                "${element['nombre']}",
+                style: GoogleFonts.montserratAlternates(
+                    color: Colors.black54, fontSize: 20),
+                softWrap: true,
+              ),
+              if (element['tipo'] == 0)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text("Saldo neto",
+                        style: GoogleFonts.montserratAlternates(
+                            color: Colors.black54, fontSize: 16)),
+                    Text("\$ ${element['saldo']}",
+                        style: GoogleFonts.montserratAlternates(
+                            color: double.parse("${element['saldo']}") < 0
+                                ? Colors.redAccent
+                                : Colors.greenAccent,
+                            fontSize: 16)),
+                  ],
+                )
+            ],
+          ),
+        ));
   }
 }
