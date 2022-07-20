@@ -21,26 +21,32 @@ class PhoneLayout extends StatelessWidget {
     BottomNavigationProvider bottomNavigationProvider =
         Provider.of<BottomNavigationProvider>(context);
     final routes = ['/home', '/moves', '/settings'];
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: (bottomNavigationProvider.isLog)
-          ? SizedBox(
-              height: 125,
-              child: Wrap(
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      const BannerInlineWidget(),
-                      _CustomNavigationBar(
-                          bottomNavigationProvider: bottomNavigationProvider,
-                          routes: routes),
-                    ],
-                  ),
-                ],
-              ),
-            )
-          : null,
+    return SafeArea(
+      child: Scaffold(
+        // appBar: AppBar(
+        //   backgroundColor: Colors.pinkAccent,
+        //   // toolbarHeight: 30,
+        // ),
+        body: child,
+        bottomNavigationBar: (bottomNavigationProvider.isLog)
+            ? SizedBox(
+                height: 125,
+                child: Wrap(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        const BannerInlineWidget(),
+                        _CustomNavigationBar(
+                            bottomNavigationProvider: bottomNavigationProvider,
+                            routes: routes),
+                      ],
+                    ),
+                  ],
+                ),
+              )
+            : null,
+      ),
     );
   }
 }
@@ -75,8 +81,8 @@ class _CustomNavigationBar extends StatelessWidget {
           ),
           BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart), label: 'Movimientos'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: 'Preferencias')
+          // BottomNavigationBarItem(
+          //     icon: Icon(Icons.person), label: 'Preferencias')
         ],
       ),
     );

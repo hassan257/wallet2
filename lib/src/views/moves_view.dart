@@ -17,35 +17,33 @@ class MovesView extends StatelessWidget {
   Widget build(BuildContext context) {
     // final size = MediaQuery.of(context).size;
     AddMoveProvider addMoveProvider = Provider.of<AddMoveProvider>(context);
-    return SafeArea(
-      child: Stack(
-        children: [
-          // Wrap(
-          //   children: [
-          //     Column(
-          //       children: const [Cuentas(), _MovesBar(), _LayoutView()],
-          //     ),
-          //   ],
-          // ),
-          const _LayoutView(),
-          Positioned(
-            bottom: 0,
-            right: 10,
-            child: FloatingActionButton(
-              backgroundColor: Colors.pinkAccent,
-              heroTag: 'addMove',
-              child: const Icon(
-                Icons.add_circle,
-                size: 40,
-              ),
-              onPressed: () {
-                addMoveProvider.reset();
-                locator<NavigationService>().navigateTo('/addmove');
-              },
+    return Stack(
+      children: [
+        // Wrap(
+        //   children: [
+        //     Column(
+        //       children: const [Cuentas(), _MovesBar(), _LayoutView()],
+        //     ),
+        //   ],
+        // ),
+        const _LayoutView(),
+        Positioned(
+          bottom: 0,
+          right: 10,
+          child: FloatingActionButton(
+            backgroundColor: Colors.pinkAccent,
+            heroTag: 'addMove',
+            child: const Icon(
+              Icons.add_circle,
+              size: 40,
             ),
-          )
-        ],
-      ),
+            onPressed: () {
+              addMoveProvider.reset();
+              locator<NavigationService>().navigateTo('/addmove');
+            },
+          ),
+        )
+      ],
     );
   }
 }
@@ -65,21 +63,18 @@ class _MainScroll extends StatelessWidget {
           delegate: _SliverCustomHeaderDelegate(
               minHeight: 250,
               maxHeight: 320,
-              child: Container(
-                color: Colors.grey[200],
-                child: Wrap(
-                  children: [
-                    Column(
-                      children: [
-                        const Cuentas(),
-                        const _MovesBar(),
-                        _Tools(
-                          saldo: saldo,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              child: Wrap(
+                children: [
+                  Column(
+                    children: [
+                      const Cuentas(),
+                      const _MovesBar(),
+                      _Tools(
+                        saldo: saldo,
+                      ),
+                    ],
+                  ),
+                ],
               )),
         ),
         SliverList(delegate: SliverChildListDelegate(elements))
@@ -347,7 +342,7 @@ class _ContenidoTarjetaMovimiento extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
-                  width: size.width * 0.65,
+                  width: size.width * 0.60,
                   child: Text(
                     item.get('nombre'),
                     softWrap: true,
@@ -357,13 +352,17 @@ class _ContenidoTarjetaMovimiento extends StatelessWidget {
                         fontSize: 20),
                   ),
                 ),
-                Text(
-                  "\$ ${item.get('cantidad')}",
-                  style: GoogleFonts.montserratAlternates(
-                      color: item.get('tipo') == 'GASTO'
-                          ? Colors.redAccent
-                          : Colors.greenAccent,
-                      fontWeight: FontWeight.bold),
+                SizedBox(
+                  width: size.width * 0.2,
+                  child: Text(
+                    "\$ ${item.get('cantidad')}",
+                    softWrap: true,
+                    style: GoogleFonts.montserratAlternates(
+                        color: item.get('tipo') == 'GASTO'
+                            ? Colors.redAccent
+                            : Colors.greenAccent,
+                        fontWeight: FontWeight.bold),
+                  ),
                 )
               ],
             ),
