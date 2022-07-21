@@ -18,9 +18,12 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return Container();
+    }
     Query<Map<String, dynamic>> stream = FirebaseFirestore.instance
         .collection('users')
-        .doc(currentUser!.uid)
+        .doc(currentUser.uid)
         .collection('moves');
     final Timestamp fechaInicial =
         Timestamp.fromDate(DateTime(DateTime.now().year, DateTime.now().month));
